@@ -1,5 +1,6 @@
-const gravity = 0.1;
+const gravity = 0.2;
 const maxVel = 50;
+const friction = 0.8;
 
 class PhysicsHandler {
 
@@ -33,9 +34,10 @@ class PhysicsHandler {
 			if (collidable.hasGravity)
 				collidable.velY = constrain(collidable.velY - gravity, -maxVel, maxVel);
 
-			collidable.updateX();
 			collidable.updateY();
+			collidable.updateX();
 			collidable.updateZ();
+			collidable.isBeingControlled = false;
 		}
 	}
 

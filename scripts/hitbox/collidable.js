@@ -3,15 +3,15 @@ class Collidable {
 	constructor(x, y, z, widthX, height, widthZ, isCollidable = true, hasGravity = false) {
 
 		this.pos = createVector(x, y, z);
-		print("pos " + this.pos);
 		this.hitbox = new Hitbox(x, y, z, widthX, height, widthZ);
 
 		this.velX = 0;
 		this.velY = 0;
 		this.velZ = 0;
-		
+
 		this.isSolid = isCollidable;
 		this.hasGravity = hasGravity;
+		this.isBeingControlled = false;
 	}
 
 	setPos(x, y, z) {
@@ -20,17 +20,17 @@ class Collidable {
 	}
 
 	updateX() {
-		if(this.velX !== 0)
+		if (this.velX !== 0)
 			this.moveX(this.velX);
 	}
 
 	updateY() {
-		if(this.velY !== 0)
+		if (this.velY !== 0)
 			this.moveY(this.velY);
 	}
 
 	updateZ() {
-		if(this.velZ !== 0)
+		if (this.velZ !== 0)
 			this.moveZ(this.velZ);
 	}
 
@@ -79,12 +79,19 @@ class Collidable {
 
 	moveY(dy) {
 
-		this.isOnGround = false;
 		this.translateY(dy);
 		let otherCollidable = physicsHandler.getCollision(this);
 
-		if (otherCollidable === undefined)
+		if (otherCollidable === undefined) {
+
+			if (this.isOnGround) {
+				this.velX /= 2;
+				this.velZ /= 2;
+			}
+
+			this.isOnGround = false;
 			return dy;
+		}
 
 		if (otherCollidable.isSolid) {
 
@@ -94,10 +101,21 @@ class Collidable {
 			this.translateY(intersection);
 			this.velY = 0;
 
+			if (!this.isBeingControlled) {
+				this.velX *= friction;
+				this.velZ *= friction;
+			}
+
 			if (signY === -1) {
 				this.isOnGround = true;
 				this.lastGround = otherCollidable;
 			}
+
+		} else if (this.isOnGround) {
+
+			this.velX /= 2;
+			this.velZ /= 2;
+			this.isOnGround = false
 		}
 
 		this.onCollision(otherCollidable);
@@ -119,5 +137,6 @@ class Collidable {
 		this.hitbox.move(0, 0, dz);
 	}
 
-	onCollision(otherCollidable) {}
+	onCollision(otherCollidable) {
+	}
 }

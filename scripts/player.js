@@ -1,3 +1,5 @@
+const maxSpeedForwards = 4;
+
 class Player extends Collidable {
 
 	constructor() {
@@ -7,7 +9,7 @@ class Player extends Collidable {
 		this.yaw = 270;
 		this.pitch = 0;
 
-		perspective(radians(60), width/height, 10, 500)
+		perspective(radians(60), width/height, this.hitbox.widthX/3, 1000)
 	}
 
 	eyeX() {
@@ -43,12 +45,27 @@ class Player extends Collidable {
 	}
 
 	move(motForwards, motSidewards) {
-		this.velX = motForwards * cos(radians(this.yaw)) + motSidewards * sin(radians(this.yaw));
-		this.velZ = motForwards * sin(radians(this.yaw)) + -motSidewards * cos(radians(this.yaw));
+
+		this.isBeingControlled = true;
+
+		this.velX += motForwards * cos(radians(this.yaw)) + motSidewards * sin(radians(this.yaw));
+		this.velZ += motForwards * sin(radians(this.yaw)) + -motSidewards * cos(radians(this.yaw));
+
+		let totalVel = sqrt(pow(this.velX, 2) + pow(this.velZ, 2));
+		print(totalVel);
+
+		if (totalVel > maxSpeedForwards) {
+			this.velX *= maxSpeedForwards / totalVel;
+			this.velZ *= maxSpeedForwards / totalVel;
+		}
 	}
 
 	jump(force) {
+
 		if (this.isOnGround) {
+
+			this.velX /= 2;
+			this.velZ /= 2;
 			this.velY = force;
 			this.isOnGround = false;
 		}
