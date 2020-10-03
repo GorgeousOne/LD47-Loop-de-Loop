@@ -24,23 +24,31 @@ class Player extends Collidable {
 		return this.pos.z + this.hitbox.widthZ/2;
 	}
 
+	dirX() {
+		return cos(radians(this.pitch)) * cos(radians(this.yaw));
+	}
+
+	dirY() {
+		return sin(radians(this.pitch));
+	}
+
+	dirZ() {
+		return cos(radians(this.pitch)) * sin(radians(this.yaw));
+	}
+
 	focus() {
 
 		let eyeX = this.eyeX();
 		let eyeY = this.eyeY();
 		let eyeZ = this.eyeZ();
 
-		let dirY = sin(radians(this.pitch));
-		let dirX = cos(radians(this.pitch)) * cos(radians(this.yaw));
-		let dirZ = cos(radians(this.pitch)) * sin(radians(this.yaw));
-
 		camera(
 			eyeX,
 			eyeY,
 			eyeZ,
-			eyeX + dirX,
-			eyeY + dirY,
-			eyeZ + dirZ,
+			eyeX + this.dirX(),
+			eyeY + this.dirY(),
+			eyeZ + this.dirZ(),
 			0, -1, 0);
 	}
 

@@ -46,6 +46,7 @@ function setup() {
 		bricks2.push(brick);
 	}
 
+	noStroke();
 }
 
 function draw() {
@@ -57,7 +58,14 @@ function draw() {
 	physicsHandler.applyPhysics();
 
 	player.focus();
-	lights();
+	// lights();
+
+	let bright = 180;
+	let bright2 = 180;
+	ambientLight(bright, bright, bright);
+
+	directionalLight(
+		bright2, bright2, bright2, player.dirX(), -3, player.dirZ());
 
 	push();
 	stroke(255, 0, 0);
