@@ -19,8 +19,8 @@ class triggerSystem {
 
 	update(passedTriggers) {
 
-		if (this.triggersForCompletion.length !== 0) {
-			this.checkTriggersToComplete(passedTriggers[passedTriggers.length-1]);
+		if (this.triggersForCompletion.length > 0) {
+			this.checkTriggersToComplete(passedTriggers[0]);
 
 			if (this.isCompleted()) {
 				return;
@@ -64,7 +64,7 @@ class triggerSystem {
 		if (this.triggersForCompletion.includes(lastTriggerIndex)) {
 
 			let i = this.triggersForCompletion.indexOf(lastTriggerIndex);
-			this.activeTriggers.splice(i, 1);
+			this.triggersForCompletion.splice(i, 1);
 		}
 
 		if (this.triggersForCompletion.length === 0) {

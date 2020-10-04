@@ -18,7 +18,22 @@ let blockSize = 200;
 
 let rndPuzzleStuff = [];
 
-function preload() {}
+let stepSounds;
+let buttonSounds;
+
+function preload() {
+
+	stepSounds = [];
+	stepSounds.push(loadSound('assets/step1.mp3'));
+	stepSounds.push(loadSound('assets/step2.mp3'));
+	stepSounds.push(loadSound('assets/step3.mp3'));
+	stepSounds.push(loadSound('assets/step4.mp3'));
+	stepSounds.push(loadSound('assets/step5.mp3'));
+
+	buttonSounds = [];
+	buttonSounds.push(loadSound('assets/button1.mp3'));
+	buttonSounds.push(loadSound('assets/button2.mp3'));
+}
 
 function setup() {
 
@@ -49,7 +64,7 @@ function windowResized() {
 }
 
 let accumulator = 0;
-let frameTime = 1000 / 60;
+let frameInterval = 1000 / 60;
 
 function draw() {
 
@@ -60,8 +75,8 @@ function draw() {
 
 		accumulator += deltaTime;
 
-		while (accumulator > frameTime) {
-			accumulator -= frameTime;
+		while (accumulator > frameInterval) {
+			accumulator -= frameInterval;
 			movePlayer();
 			physicsHandler.applyPhysics();
 		}
@@ -109,13 +124,22 @@ const rotSpeed = 0.13;
 function keyPressed() {
 
 	if (keyCode === 27 || keyCode === 80) {
-		gameIsPaused = !gameIsPaused;
 
 		if (gameIsPaused) {
-			exitPointerLock();
+			gameIsPaused = false;
+		}else {
+			pauseGame();
 		}
 	}
 }
+
+function pauseGame() {
+	gameIsPaused = true;
+	exitPointerLock();
+}
+
+const stepSoundInterval = 250;
+let timeWalked = 0;
 
 function movePlayer() {
 
@@ -140,8 +164,11 @@ function movePlayer() {
 		motForwards -= acceleration;
 
 	if (motForwards === 0 && motSidewards === 0) {
+		timeWalked = stepSoundInterval;
 		return;
 	}
+
+	timeWalked += deltaTime;
 
 	if (motForwards !== 0 && motSidewards !== 0) {
 		motForwards /= sqrt(2);
@@ -154,6 +181,15 @@ function movePlayer() {
 	}
 
 	player.move(motForwards, motSidewards);
+	makeWalkingSounds();
+}
+
+function makeWalkingSounds() {
+
+	if (timeWalked >= stepSoundInterval) {
+		timeWalked %= stepSoundInterval;
+		stepSounds[Math.floor(Math.random() * stepSounds.length)].play();
+	}
 }
 
 function createRing(size, gridSize, gridOffsetXZ = 0, gridOffsetY = 0, isVisible = true) {

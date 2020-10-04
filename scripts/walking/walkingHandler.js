@@ -70,6 +70,7 @@ class WalkingHandler {
 		system.onCompleteAction = () => {
 			physicsHandler.removeCollidable(block);
 			rndPuzzleStuff.shift();
+
 		};
 
 		system.addTriggerAction(0, triggerTask0);
