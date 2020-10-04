@@ -24,6 +24,10 @@ class Player extends Collidable {
 		return this.pos.z + this.hitbox.widthZ/2;
 	}
 
+	eyeLoc() {
+		return createVector(this.eyeX(), this.eyeY(), this.eyeZ());
+	}
+
 	dirX() {
 		return cos(radians(this.pitch)) * cos(radians(this.yaw));
 	}
@@ -34,6 +38,10 @@ class Player extends Collidable {
 
 	dirZ() {
 		return cos(radians(this.pitch)) * sin(radians(this.yaw));
+	}
+
+	facing() {
+		return createVector(this.dirX(), this.dirY(), this.dirZ());
 	}
 
 	focus() {
@@ -60,7 +68,6 @@ class Player extends Collidable {
 		this.velZ += motForwards * sin(radians(this.yaw)) + -motSidewards * cos(radians(this.yaw));
 
 		let totalVel = sqrt(pow(this.velX, 2) + pow(this.velZ, 2));
-		print(totalVel);
 
 		if (totalVel > maxSpeedForwards) {
 			this.velX *= maxSpeedForwards / totalVel;

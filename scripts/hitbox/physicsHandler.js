@@ -29,7 +29,7 @@ class PhysicsHandler {
 
 	applyPhysics() {
 
-		for (let collidable of this.collidables) {
+		this.collidables.forEach(collidable => {
 
 			if (collidable.hasGravity)
 				collidable.velY = constrain(collidable.velY - gravity, -maxVel, maxVel);
@@ -38,7 +38,7 @@ class PhysicsHandler {
 			collidable.updateX();
 			collidable.updateZ();
 			collidable.isBeingControlled = false;
-		}
+		});
 	}
 
 	getCollision(collidable) {

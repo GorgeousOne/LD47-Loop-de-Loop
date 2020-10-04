@@ -3,7 +3,10 @@ new p5();
 const startTime = Date.now();
 
 let physicsHandler;
+let interactionHandler;
+
 let player;
+let gameIsPaused = false;
 
 function preload() {
 }
@@ -11,6 +14,7 @@ function preload() {
 let bricks;
 let bricks2;
 let bricks3;
+let button;
 
 function setup() {
 
@@ -19,6 +23,8 @@ function setup() {
 	smooth();
 
 	physicsHandler = new PhysicsHandler();
+	interactionHandler = new InteractionHandler();
+
 	player = new Player();
 	physicsHandler.addCollidable(player);
 
@@ -46,19 +52,31 @@ function setup() {
 		bricks2.push(brick);
 	}
 
+	button = new Button(
+		createVector(0, 50, 0),
+		20, 5,
+		createVector(0, 0, 1));
+
+	interactionHandler.addInteractable(button);
 	noStroke();
 }
 
 function draw() {
 
-	requestPointerLock();
 	background(205);
 
-	movePlayer();
-	physicsHandler.applyPhysics();
+	if (!gameIsPaused) {
+
+		requestPointerLock();
+		background(100);
+		movePlayer();
+		physicsHandler.applyPhysics();
+
+		let dirRay = new Ray(player.eyeLoc(), player.facing(), 75);
+		interactionHandler.checkHovering(dirRay);
+	}
 
 	player.focus();
-	// lights();
 
 	let bright = 180;
 	let bright2 = 180;
@@ -78,6 +96,10 @@ function draw() {
 
 	bricks.forEach(brick => brick.display());
 	bricks2.forEach(brick => brick.display());
+
+	push();
+	button.display(button.isHovered ? color(255, 160, 0) : color(255, 25, 10));
+	pop();
 }
 
 const speed = 0.5;
@@ -86,8 +108,13 @@ const rotSpeed = 0.1;
 
 function keyPressed() {
 
-	if (keyCode === 32)
-		player.jump(5);
+	if (keyCode === 27 || keyCode === 80) {
+		gameIsPaused = !gameIsPaused;
+
+		if (gameIsPaused) {
+			exitPointerLock();
+		}
+	}
 }
 
 function movePlayer() {
@@ -119,7 +146,7 @@ function movePlayer() {
 	}
 
 	if (keyIsDown(32))
-		player.jump(2);
+		player.jump(5);
 
 	if (!player.isOnGround) {
 		motForwards /= 5;
