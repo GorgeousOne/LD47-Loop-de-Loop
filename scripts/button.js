@@ -5,35 +5,36 @@ class Button extends Interactable {
 
 		super();
 
-		let widthX;
-		let height;
-		let widthZ;
+		this.pos = pos;
+		this.widthX;
+		this.height;
+		this.widthZ;
 
 		if (facing.x !== 0) {
-			widthX = depth;
-			height = size;
-			widthZ = size;
+			this.widthX = depth;
+			this.height = size;
+			this.widthZ = size;
 
 		}else if (facing.z !== 0) {
-			widthX = size;
-			height = size;
-			widthZ = depth;
+			this.widthX = size;
+			this.height = size;
+			this.widthZ = depth;
 
 		}else {
-			widthX = size;
-			height = depth;
-			widthZ = size;
+			this.widthX = size;
+			this.height = depth;
+			this.widthZ = size;
 		}
 
 		let v = [
-			createVector(pos.x - widthX/2, pos.y - height/2, pos.z - widthZ/2),
-			createVector(pos.x + widthX/2, pos.y - height/2, pos.z - widthZ/2),
-			createVector(pos.x + widthX/2, pos.y - height/2, pos.z + widthZ/2),
-			createVector(pos.x - widthX/2, pos.y - height/2, pos.z + widthZ/2),
-			createVector(pos.x - widthX/2, pos.y + height/2, pos.z - widthZ/2),
-			createVector(pos.x + widthX/2, pos.y + height/2, pos.z - widthZ/2),
-			createVector(pos.x + widthX/2, pos.y + height/2, pos.z + widthZ/2),
-			createVector(pos.x - widthX/2, pos.y + height/2, pos.z + widthZ/2),
+			createVector(pos.x - this.widthX/2, pos.y - this.height/2, pos.z - this.widthZ/2),
+			createVector(pos.x + this.widthX/2, pos.y - this.height/2, pos.z - this.widthZ/2),
+			createVector(pos.x + this.widthX/2, pos.y - this.height/2, pos.z + this.widthZ/2),
+			createVector(pos.x - this.widthX/2, pos.y - this.height/2, pos.z + this.widthZ/2),
+			createVector(pos.x - this.widthX/2, pos.y + this.height/2, pos.z - this.widthZ/2),
+			createVector(pos.x + this.widthX/2, pos.y + this.height/2, pos.z - this.widthZ/2),
+			createVector(pos.x + this.widthX/2, pos.y + this.height/2, pos.z + this.widthZ/2),
+			createVector(pos.x - this.widthX/2, pos.y + this.height/2, pos.z + this.widthZ/2),
 		];
 
 		this.faces.push(new Face(v[0], v[4], v[7]));
@@ -50,5 +51,12 @@ class Button extends Interactable {
 		this.faces.push(new Face(v[0], v[5], v[4]));
 		this.faces.push(new Face(v[3], v[2], v[6]));
 		this.faces.push(new Face(v[3], v[6], v[7]));
+	}
+
+	display(color = color(255, 10, 0)) {
+
+		fill(color);
+		translate(this.pos.x, this.pos.y, this.pos.z);
+		box(this.widthX, this.height, this.widthZ);
 	}
 }

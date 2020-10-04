@@ -9,7 +9,7 @@ class Player extends Collidable {
 		this.yaw = 270;
 		this.pitch = 0;
 
-		perspective(radians(60), width/height, this.hitbox.widthX/3, 1000)
+		this.applyFOV();
 	}
 
 	eyeX() {
@@ -44,7 +44,11 @@ class Player extends Collidable {
 		return createVector(this.dirX(), this.dirY(), this.dirZ());
 	}
 
-	focus() {
+	applyFOV() {
+		perspective(radians(60), width/height, this.hitbox.widthX/3, 1000)
+	}
+
+	applyCam() {
 
 		let eyeX = this.eyeX();
 		let eyeY = this.eyeY();

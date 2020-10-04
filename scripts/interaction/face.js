@@ -23,7 +23,10 @@ class Face {
 
 	display() {
 
-		beginShape();
+		let normal = this.getNormal();
+
+		beginShape(TRIANGLES);
+		// normal(normal.x, normal.y, normal.z);
 		vertex(this.p0.x, this.p0.y, this.p0.z);
 		vertex(this.p1.x, this.p1.y, this.p1.z);
 		vertex(this.p2.x, this.p2.y, this.p2.z);

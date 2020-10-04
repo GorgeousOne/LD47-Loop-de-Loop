@@ -61,22 +61,38 @@ function setup() {
 	noStroke();
 }
 
+let accumulator = 0;
+let frameTime = 1000 / 60;
+
+function windowResized() {
+	resizeCanvas(windowWidth, windowHeight);
+	player.applyFOV();
+}
+
 function draw() {
 
-	background(205);
+	// print(~~frameRate());
 
 	if (!gameIsPaused) {
 
 		requestPointerLock();
-		background(100);
-		movePlayer();
-		physicsHandler.applyPhysics();
+		background(145, 202, 255);
+
+		accumulator += deltaTime;
+
+		while (accumulator > frameTime) {
+			accumulator -= frameTime;
+			physicsHandler.applyPhysics();
+			movePlayer();
+		}
 
 		let dirRay = new Ray(player.eyeLoc(), player.facing(), 75);
 		interactionHandler.checkHovering(dirRay);
+	}else {
+		background(205);
 	}
 
-	player.focus();
+	player.applyCam();
 
 	let bright = 180;
 	let bright2 = 180;
@@ -98,13 +114,12 @@ function draw() {
 	bricks2.forEach(brick => brick.display());
 
 	push();
-	button.display(button.isHovered ? color(255, 160, 0) : color(255, 25, 10));
+	button.display(button.isHovered ? color(255, 80, 80) : color(255, 40, 40));
 	pop();
 }
 
 const speed = 0.5;
-
-const rotSpeed = 0.1;
+const rotSpeed = 0.13;
 
 function keyPressed() {
 
@@ -120,6 +135,9 @@ function keyPressed() {
 function movePlayer() {
 
 	player.rotate(-rotSpeed * movedX, -rotSpeed * movedY);
+
+	if (keyIsDown(32))
+		player.jump(5);
 
 	let motForwards = 0;
 	let motSidewards = 0;
@@ -144,9 +162,6 @@ function movePlayer() {
 		motForwards /= sqrt(2);
 		motSidewards /= sqrt(2);
 	}
-
-	if (keyIsDown(32))
-		player.jump(5);
 
 	if (!player.isOnGround) {
 		motForwards /= 5;
