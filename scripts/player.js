@@ -1,19 +1,20 @@
-const maxSpeedForwards = 4;
+const maxSpeed = 7;
 
 class Player extends Collidable {
 
-	constructor() {
+	constructor(x, y, z, yaw) {
 
-		super(0, 0, 150, 20, 80, 20, false, true);
+		super(x, y, z, 20, 80, 20, false, true);
 
-		this.yaw = 270;
+		this.yaw = yaw;
 		this.pitch = 0;
 
 		this.applyFOV();
+		this.hitbox.outline = color(0, 255, 0);
 	}
 
 	eyeX() {
-		return this.pos.x + this.hitbox.widthX/2;
+		return this.pos.x;
 	}
 
 	eyeY() {
@@ -21,7 +22,7 @@ class Player extends Collidable {
 	}
 
 	eyeZ() {
-		return this.pos.z + this.hitbox.widthZ/2;
+		return this.pos.z;
 	}
 
 	eyeLoc() {
@@ -45,7 +46,7 @@ class Player extends Collidable {
 	}
 
 	applyFOV() {
-		perspective(radians(60), width/height, this.hitbox.widthX/3, 1000)
+		perspective(radians(60), width/height, this.hitbox.widthX/3, 1500)
 	}
 
 	applyCam() {
@@ -73,9 +74,9 @@ class Player extends Collidable {
 
 		let totalVel = sqrt(pow(this.velX, 2) + pow(this.velZ, 2));
 
-		if (totalVel > maxSpeedForwards) {
-			this.velX *= maxSpeedForwards / totalVel;
-			this.velZ *= maxSpeedForwards / totalVel;
+		if (totalVel > maxSpeed) {
+			this.velX *= maxSpeed / totalVel;
+			this.velZ *= maxSpeed / totalVel;
 		}
 	}
 
@@ -97,5 +98,9 @@ class Player extends Collidable {
 
 		this.yaw %= 360;
 		this.pitch = min(89.9, max(-89.9, this.pitch));
+	}
+
+	display() {
+		this.hitbox.display();
 	}
 }

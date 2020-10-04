@@ -19,107 +19,123 @@ class Collidable {
 		this.hitbox.setPos(x, y, z);
 	}
 
-	updateX() {
+	updateX(collidables) {
 		if (this.velX !== 0)
-			this.moveX(this.velX);
+			this.moveX(this.velX, collidables);
 	}
 
-	updateY() {
+	updateY(collidables) {
 		if (this.velY !== 0)
-			this.moveY(this.velY);
+			this.moveY(this.velY, collidables);
 	}
 
-	updateZ() {
+	updateZ(collidables) {
 		if (this.velZ !== 0)
-			this.moveZ(this.velZ);
+			this.moveZ(this.velZ, collidables);
 	}
 
-	moveX(dx) {
+	moveX(dx, collidables) {
 
 		this.translateX(dx);
-		let otherCollidable = physicsHandler.getCollision(this);
+		let intersections = this.getIntersections(collidables);
 
-		if (otherCollidable === undefined)
-			return dx;
-
-		let intersection;
-
-		if (otherCollidable.isSolid) {
-
-			let signX = signum(dx);
-			intersection = otherCollidable.hitbox.getBoundX(-signX) - this.hitbox.getBoundX(signX);
-			this.translateX(intersection);
+		if (intersections.length === 0) {
+			return;
 		}
 
-		this.onCollision(otherCollidable);
-		otherCollidable.onCollision(this);
+		for (let otherCollidable of intersections) {
+
+			if (otherCollidable.isSolid) {
+
+				let intersectionDir = Math.sign(dx);
+				let intersection = otherCollidable.hitbox.getBoundX(-intersectionDir) - this.hitbox.getBoundX(intersectionDir);
+				this.translateX(intersection);
+				this.velX = 0;
+			}
+
+			physicsHandler.callCollision(this, otherCollidable);
+		}
 	}
 
-	moveZ(dz) {
+	moveZ(dz, collidables) {
 
 		this.translateZ(dz);
-		let otherCollidable = physicsHandler.getCollision(this);
+		let intersections = this.getIntersections(collidables);
 
-		if (otherCollidable === undefined)
-			return dz;
-
-		this.velZ = 0;
-		let intersection;
-
-		if (otherCollidable.isSolid) {
-
-			let signZ = signum(dz);
-			intersection = otherCollidable.hitbox.getBoundZ(-signZ) - this.hitbox.getBoundZ(signZ);
-			this.translateZ(intersection);
+		if (intersections.length === 0) {
+			return;
 		}
 
-		this.onCollision(otherCollidable);
-		otherCollidable.onCollision(this);
+		for (let otherCollidable of intersections) {
+
+			if (otherCollidable.isSolid) {
+
+				let intersectionDir = Math.sign(dz);
+				let intersection = otherCollidable.hitbox.getBoundZ(-intersectionDir) - this.hitbox.getBoundZ(intersectionDir);
+				this.translateZ(intersection);
+				this.velZ = 0;
+			}
+
+			physicsHandler.callCollision(this, otherCollidable);
+		}
 	}
 
-	moveY(dy) {
+	moveY(dy, collidables) {
 
 		this.translateY(dy);
-		let otherCollidable = physicsHandler.getCollision(this);
+		let intersections = this.getIntersections(collidables);
 
-		if (otherCollidable === undefined) {
-
+		if (intersections.length === 0) {
+			//half the velocity when losing ground
 			if (this.isOnGround) {
 				this.velX /= 2;
 				this.velZ /= 2;
+				this.isOnGround = false;
+				return;
 			}
-
-			this.isOnGround = false;
-			return dy;
 		}
 
-		if (otherCollidable.isSolid) {
+		for (let otherCollidable of intersections) {
 
-			let signY = signum(dy);
-			let intersection = otherCollidable.hitbox.getBoundY(-signY) - this.hitbox.getBoundY(signY);
+			if (otherCollidable.isSolid) {
 
-			this.translateY(intersection);
-			this.velY = 0;
+				let intersectionDir = Math.sign(dy);
+				let intersection = otherCollidable.hitbox.getBoundY(-intersectionDir) - this.hitbox.getBoundY(intersectionDir);
 
-			if (!this.isBeingControlled) {
-				this.velX *= friction;
-				this.velZ *= friction;
+				this.translateY(intersection);
+				this.velY = 0;
+
+				//dont apply floor friction when being player controlled
+				if (!this.isBeingControlled) {
+					this.velX *= friction;
+					this.velZ *= friction;
+				}
+
+				if (intersectionDir === -1) {
+					this.isOnGround = true;
+				}
+
+			} else if (this.isOnGround) {
+				//half the velocity when losing ground
+				this.velX /= 2;
+				this.velZ /= 2;
+				this.isOnGround = false
 			}
 
-			if (signY === -1) {
-				this.isOnGround = true;
-				this.lastGround = otherCollidable;
-			}
+			physicsHandler.callCollision(this, otherCollidable);
+		}
+	}
 
-		} else if (this.isOnGround) {
+	getIntersections(collidables) {
 
-			this.velX /= 2;
-			this.velZ /= 2;
-			this.isOnGround = false
+		let intersections = [];
+
+		for (let other of collidables) {
+			if (other !== this && this.hitbox.intersects(other.hitbox))
+				intersections.push(other);
 		}
 
-		this.onCollision(otherCollidable);
-		otherCollidable.onCollision(this);
+		return intersections;
 	}
 
 	translateX(dx) {
@@ -135,8 +151,5 @@ class Collidable {
 	translateZ(dz) {
 		this.pos.add(0, 0, dz);
 		this.hitbox.move(0, 0, dz);
-	}
-
-	onCollision(otherCollidable) {
 	}
 }

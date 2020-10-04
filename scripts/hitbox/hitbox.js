@@ -6,6 +6,7 @@ class Hitbox {
 		this.widthX = widthX;
 		this.widthZ = widthZ;
 		this.height = height;
+		this.outline = color(0, 0, 255);
 	}
 
 	// setSize(width, height) {
@@ -22,11 +23,11 @@ class Hitbox {
 	}
 
 	minX() {
-		return this.pos.x;
+		return this.pos.x - this.widthX/2;
 	}
 
 	maxX() {
-		return this.pos.x + this.widthX;
+		return this.pos.x + this.widthX/2;
 	}
 
 	minY() {
@@ -38,11 +39,11 @@ class Hitbox {
 	}
 
 	minZ() {
-		return this.pos.z;
+		return this.pos.z - this.widthZ/2;
 	}
 
 	maxZ() {
-		return this.pos.z + this.widthZ;
+		return this.pos.z + this.widthZ/2;
 	}
 
 	intersects(otherBox) {
@@ -101,17 +102,14 @@ class Hitbox {
 
 	display() {
 
-		if (!this.pos)
-			this.pos = createVector();
-
 		push();
 		translate(
-			this.minX + this.widthX/2,
-			this.minY + this.height/2,
-			this.minZ + this.widthZ/2);
+			this.pos.x,
+			this.pos.y + this.height/2,
+			this.pos.z);
 
 		noFill();
-		stroke(color(0, 0, 255));
+		stroke(this.outline);
 
 		box(this.widthX, this.height, this.widthZ);
 		pop();

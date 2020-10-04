@@ -6,26 +6,29 @@ class PhysicsHandler {
 
 	constructor() {
 		this.collidables = [];
+		this.collisionListeners = []
 	}
 
 	addCollidable(collidable) {
 		this.collidables.push(collidable);
 	}
 
-	removeCollidable(collidable) {
 
-		if(!collidable)
-			throw 'could not remove undefined collidable';
 
-		for(let i = 0; i < this.collidables.length; i++) {
-
-			if (this.collidables[i] === collidable) {
-
-				this.collidables.splice(i, 1);
-				return;
-			}
-		}
-	}
+	// removeCollidable(collidable) {
+	//
+	// 	if(!collidable)
+	// 		throw 'could not remove undefined collidable';
+	//
+	// 	for(let i = 0; i < this.collidables.length; i++) {
+	//
+	// 		if (this.collidables[i] === collidable) {
+	//
+	// 			this.collidables.splice(i, 1);
+	// 			return;
+	// 		}
+	// 	}
+	// }
 
 	applyPhysics() {
 
@@ -34,22 +37,14 @@ class PhysicsHandler {
 			if (collidable.hasGravity)
 				collidable.velY = constrain(collidable.velY - gravity, -maxVel, maxVel);
 
-			collidable.updateY();
-			collidable.updateX();
-			collidable.updateZ();
+			collidable.updateY(this.collidables);
+			collidable.updateX(this.collidables);
+			collidable.updateZ(this.collidables);
 			collidable.isBeingControlled = false;
 		});
 	}
 
-	getCollision(collidable) {
+	callCollision(c1, c2) {
 
-		for (let other of this.collidables) {
-
-			if (other === collidable || !other.isSolid)
-				continue;
-
-			if (collidable.hitbox.intersects(other.hitbox))
-				return other;
-		}
 	}
 }

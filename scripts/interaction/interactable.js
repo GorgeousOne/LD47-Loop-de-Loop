@@ -13,12 +13,11 @@ class Interactable {
 
 	intersects(ray) {
 
-
 		for(let face of this.faces){
 			if (face.intersects(ray)) {
 				return true;
 			}
-		};
+		}
 
 		return false;
 	}

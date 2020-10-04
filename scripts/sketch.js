@@ -1,6 +1,6 @@
 new p5();
 
-const startTime = Date.now();
+var showHitboxes = true;
 
 let physicsHandler;
 let interactionHandler;
@@ -11,9 +11,10 @@ let gameIsPaused = false;
 function preload() {
 }
 
-let bricks;
-let bricks2;
-let bricks3;
+let floorBlocks;
+let innerWallBlocks;
+let outerWallBlocks;
+
 let button;
 
 function setup() {
@@ -25,53 +26,32 @@ function setup() {
 	physicsHandler = new PhysicsHandler();
 	interactionHandler = new InteractionHandler();
 
-	player = new Player();
+	player = new Player(100, 0, 300, 0);
 	physicsHandler.addCollidable(player);
 
-	bricks = [];
-
-	for (let i = 0; i < 15; i++) {
-		let brick = new Wall(-50, -250, 250 - i*100, 100, 200, 100);
-		physicsHandler.addCollidable(brick);
-		bricks.push(brick);
-	}
-
-	bricks2 = [];
-
-	for (let i = 0; i < 15; i++) {
-		let brick = new Wall(-250, -250, 250 - i*100, 100, 200, 100);
-		physicsHandler.addCollidable(brick);
-		bricks2.push(brick);
-	}
-
-	bricks3 = [];
-
-	for (let i = 0; i < 5; i++) {
-		let brick = new Wall(-150, -100, 250 - i*300, 100, 100, 100);
-		physicsHandler.addCollidable(brick);
-		bricks2.push(brick);
-	}
+	let blockSize = 200;
+	floorBlocks = createRing(blockSize, 5, 1, -1, true);
+	innerWallBlocks = createRing(blockSize, 3, 2, 0, false);
+	outerWallBlocks = createRing(blockSize, 7, 0, 0, false);
 
 	button = new Button(
 		createVector(0, 50, 0),
-		20, 5,
+		10, 5,
 		createVector(0, 0, 1));
 
 	interactionHandler.addInteractable(button);
 	noStroke();
 }
 
-let accumulator = 0;
-let frameTime = 1000 / 60;
-
 function windowResized() {
 	resizeCanvas(windowWidth, windowHeight);
 	player.applyFOV();
 }
 
-function draw() {
+let accumulator = 0;
+let frameTime = 1000 / 60;
 
-	// print(~~frameRate());
+function draw() {
 
 	if (!gameIsPaused) {
 
@@ -82,11 +62,11 @@ function draw() {
 
 		while (accumulator > frameTime) {
 			accumulator -= frameTime;
-			physicsHandler.applyPhysics();
 			movePlayer();
+			physicsHandler.applyPhysics();
 		}
 
-		let dirRay = new Ray(player.eyeLoc(), player.facing(), 75);
+		let dirRay = new Ray(player.eyeLoc(), player.facing(), 100);
 		interactionHandler.checkHovering(dirRay);
 	}else {
 		background(205);
@@ -98,8 +78,8 @@ function draw() {
 	let bright2 = 180;
 	ambientLight(bright, bright, bright);
 
-	directionalLight(
-		bright2, bright2, bright2, player.dirX(), -3, player.dirZ());
+	directionalLight(bright2, bright2, bright2, player.dirX(), -3, player.dirZ());
+	// directionalLight(bright2, bright2, bright2, 0.5, -3, 1);
 
 	push();
 	stroke(255, 0, 0);
@@ -110,15 +90,17 @@ function draw() {
 	line(0, 0, 0, 0, 0, 10);
 	pop();
 
-	bricks.forEach(brick => brick.display());
-	bricks2.forEach(brick => brick.display());
+	player.display();
+	floorBlocks.forEach(brick => brick.display());
+	innerWallBlocks.forEach(brick => brick.display());
+	outerWallBlocks.forEach(brick => brick.display());
 
 	push();
 	button.display(button.isHovered ? color(255, 80, 80) : color(255, 40, 40));
 	pop();
 }
 
-const speed = 0.5;
+const acceleration = 0.7;
 const rotSpeed = 0.13;
 
 function keyPressed() {
@@ -143,16 +125,16 @@ function movePlayer() {
 	let motSidewards = 0;
 
 	if (keyIsDown(65))
-		motSidewards -= speed;
+		motSidewards -= acceleration;
 
 	if (keyIsDown(68))
-		motSidewards += speed;
+		motSidewards += acceleration;
 
 	if (keyIsDown(87))
-		motForwards += speed;
+		motForwards += acceleration;
 
 	if (keyIsDown(83))
-		motForwards -= speed;
+		motForwards -= acceleration;
 
 	if (motForwards === 0 && motSidewards === 0) {
 		return;
@@ -171,8 +153,47 @@ function movePlayer() {
 	player.move(motForwards, motSidewards);
 }
 
-function signum(f) {
-	if (f > 0) return 1;
-	if (f < 0) return -1;
-	return 0;
+function createRing(size, gridSize, gridOffsetXZ = 0, gridOffsetY = 0, isVisible = true) {
+
+	let ring = [];
+
+	for (let x = 0; x < gridSize; x++) {
+		for (let z = 0; z < gridSize; z++) {
+
+			if (x > 0 && x < gridSize-1 && z > 0 && z < gridSize-1) {
+				continue;
+			}
+
+			let block = new Block(
+				(gridOffsetXZ + x) * size,
+				gridOffsetY * size,
+				(gridOffsetXZ + z) * size,
+				size, size, size);
+
+			block.isVisible = isVisible;
+			ring.push(block);
+			physicsHandler.addCollidable(block);
+		}
+	}
+
+	return ring;
+}
+
+function createTrackers(size, gridSize) {
+
+	let trackers = [];
+
+	trackers.push(new Block(0, 0, 0, size, size, size));
+	trackers.push(new Block(gridSize*size, 0, 0, size, size, size));
+	trackers.push(new Block(gridSize*size, 0, gridSize*size, size, size, size));
+	trackers.push(new Block(0, 0, gridSize*size, size, size, size));
+
+	trackers.forEach(collider => {
+		collider.hitbox.outline = color(255, 0, 0);
+		collider.isVisible = false;
+		collider.isSolid = false;
+		physicsHandler.addCollidable(collider);
+	});
+
+	return trackers;
 }

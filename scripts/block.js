@@ -1,15 +1,25 @@
 
-class Wall extends Collidable {
+class Block extends Collidable {
 
 	constructor(x, y, z, widthX, height, widthZ) {
-		super(x, y, z, widthX, height, widthZ);
+
+		super(x+widthX/2, y, z+widthZ/2, widthX, height, widthZ);
+
+		this.isVisible = true;
 	}
 
-	display() {
+	display(c = color(255)) {
 
-		push();
-		translate(this.pos.x + this.hitbox.widthX/2, this.pos.y + this.hitbox.height/2, this.pos.z + this.hitbox.widthZ/2);
-		box(this.hitbox.widthX, this.hitbox.height, this.hitbox.widthZ);
-		pop();
+		if (this.isVisible) {
+			push();
+			fill(c);
+			translate(this.pos.x, this.pos.y + this.hitbox.height / 2, this.pos.z);
+			box(this.hitbox.widthX, this.hitbox.height, this.hitbox.widthZ);
+			pop();
+		}
+
+		if (showHitboxes) {
+			this.hitbox.display();
+		}
 	}
 }
