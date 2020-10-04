@@ -1,5 +1,5 @@
-const maxSpeed = 15;
-// const maxSpeed = 7;
+// const maxSpeed = 15;
+const maxSpeed = 7;
 
 class Player extends Collidable {
 
@@ -47,7 +47,7 @@ class Player extends Collidable {
 	}
 
 	applyFOV() {
-		perspective(radians(60), width/height, this.hitbox.widthX/3, 1500)
+		perspective(radians(60), width/height, this.hitbox.widthX/3, 2500)
 	}
 
 	applyCam() {

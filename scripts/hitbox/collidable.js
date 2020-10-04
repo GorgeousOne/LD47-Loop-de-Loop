@@ -11,6 +11,10 @@ class Collidable {
 
 		this.isSolid = isCollidable;
 		this.hasGravity = hasGravity;
+
+		this.isOnGround = false;
+		this.lastGround = undefined;
+
 		this.isBeingControlled = false;
 	}
 
@@ -111,12 +115,13 @@ class Collidable {
 					this.velZ *= friction;
 				}
 
+				physicsHandler.callCollision(this, otherCollidable);
+
 				if (intersectionDir === -1) {
 					this.isOnGround = true;
+					this.lastGround = this.pos.copy();
 				}
 			}
-
-			physicsHandler.callCollision(this, otherCollidable);
 		}
 	}
 

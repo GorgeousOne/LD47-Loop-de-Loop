@@ -1,8 +1,8 @@
 class WalkingHandler {
 
-	constructor(trackerBlocks) {
+	constructor(triggerBlocks) {
 
-		this.trackers = trackerBlocks;
+		this.triggers = triggerBlocks;
 		this.passedTrackers = [];
 		this.triggerSystems = [];
 
@@ -19,17 +19,20 @@ class WalkingHandler {
 
 	onCollision(c1, c2) {
 
-		if (!trackerBlocks.includes(c2)) {
+		if (!this.currentSystem) {
 			return;
 		}
 
-		let index = trackerBlocks.indexOf(c2);
+		if (!triggerBlocks.includes(c2)) {
+			return;
+		}
+
+		let index = triggerBlocks.indexOf(c2);
 
 		if (this.passedTrackers.length > 0 && index === this.passedTrackers[0]) {
 			return;
 		}
 
-		print("triggered trigger " + index);
 		this.passedTrackers.unshift(index);
 		this.currentSystem.update(this.passedTrackers);
 
@@ -40,14 +43,8 @@ class WalkingHandler {
 		this.passedTrackers = [];
 		this.triggerSystems.shift();
 
-		if (this.triggerSystems.length === 0) {
-			gameIsPaused = true;
-			physicsHandler.removeListener(this);
-			return;
-		}
-
 		if (this.currentSystem.startNextTaskOnFinish) {
-			this.currentSystem = this.triggerSystems[0];
+			this.nextSystem()
 		}
 	}
 
@@ -55,29 +52,36 @@ class WalkingHandler {
 
 		let system = new triggerSystem();
 		let block = new Block(-100, 0, -100, blockSize, blockSize, blockSize);
-
-		physicsHandler.addCollidable(block);
-		rndPuzzleStuff.push(block);
+		addPuzzleObject(block);
 
 		let triggerTask0 = new TriggerTask(-1, () => {
-			block.setPos(1000, 0, 1000);
+			block.setPos(5*blockSize, 0, 5*blockSize);
 		});
 
 		let triggerTask1 = new TriggerTask(1, () => {
-			block.setPos(200, 0, 1000);
+			block.setPos(blockSize, 0, 5*blockSize);
 		});
-
-		system.onCompleteAction = () => {
-			physicsHandler.removeCollidable(block);
-			rndPuzzleStuff.shift();
-
-		};
 
 		system.addTriggerAction(0, triggerTask0);
 		system.addTriggerAction(1, triggerTask1);
-		system.triggersForCompletion.push(2);
 		system.triggersForCompletion.push(3);
+		system.triggersForCompletion.push(6);
+
+		system.onCompleteAction = () => {
+			floorBlocks[5].setAir(true);
+			floorBlocks[7].setAir(true);
+			floorBlocks[9].setAir(true);
+
+			pitBlocks.forEach(block => {
+				addPuzzleObject(block);
+			})
+		};
 
 		this.triggerSystems.push(system);
+	}
+
+	createSystem2() {
+
+
 	}
 }

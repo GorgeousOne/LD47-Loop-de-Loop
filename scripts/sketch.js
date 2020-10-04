@@ -9,17 +9,20 @@ let walkingHandler;
 let player;
 let gameIsPaused = false;
 
+let blockSize = 200;
 let floorBlocks;
 let innerWallBlocks;
 let outerWallBlocks;
-let trackerBlocks;
+let triggerBlocks;
 
-let blockSize = 200;
+let pitBlocks;
+let pitFloorBlock;
 
-let rndPuzzleStuff = [];
+let puzzleStuff = [];
 
 let stepSounds;
 let buttonSounds;
+let damageSound;
 
 function preload() {
 
@@ -33,6 +36,8 @@ function preload() {
 	buttonSounds = [];
 	buttonSounds.push(loadSound('assets/button1.mp3'));
 	buttonSounds.push(loadSound('assets/button2.mp3'));
+
+	damageSound = loadSound('assets/damage2.mp3');
 }
 
 function setup() {
@@ -43,15 +48,18 @@ function setup() {
 	physicsHandler = new PhysicsHandler();
 	interactionHandler = new InteractionHandler();
 
-	player = new Player(1.2 * blockSize, 0, 1.2 * blockSize, 45);
+	player = new Player(3.2 * blockSize, 0, 1.2 * blockSize, 45);
 	physicsHandler.addCollidable(player);
 
 	floorBlocks = createRing(blockSize, 5, 1, -1, true);
 	innerWallBlocks = createRing(blockSize, 3, 2, 0, true);
 	outerWallBlocks = createRing(blockSize, 7, 0, 0, true);
 
-	trackerBlocks = createTrackers(blockSize, 5);
-	walkingHandler = new WalkingHandler(trackerBlocks);
+	createTriggers(blockSize, 5);
+	createPitBlocks();
+
+	walkingHandler = new WalkingHandler(triggerBlocks);
+	physicsHandler.collisionListeners.push(this);
 	physicsHandler.collisionListeners.push(walkingHandler);
 
 	smooth();
@@ -61,6 +69,23 @@ function setup() {
 function windowResized() {
 	resizeCanvas(windowWidth, windowHeight);
 	player.applyFOV();
+}
+
+function addPuzzleObject(object) {
+	puzzleStuff.push(object);
+	physicsHandler.addCollidable(object);
+}
+
+function removePuzzleObject(object) {
+
+	for(let i = 0; i < this.puzzleStuff.length; i++) {
+
+		if (this.puzzleStuff[i] === object) {
+			this.puzzleStuff.splice(i, 1);
+			physicsHandler.remove(object);
+			return;
+		}
+	}
 }
 
 let accumulator = 0;
@@ -101,8 +126,8 @@ function draw() {
 	floorBlocks.forEach(block => block.display());
 	innerWallBlocks.forEach(block => block.display());
 	outerWallBlocks.forEach(block => block.display());
-	trackerBlocks.forEach(block => block.display());
-	rndPuzzleStuff.forEach(block => block.display());
+	triggerBlocks.forEach(block => block.display());
+	puzzleStuff.forEach(block => block.display());
 }
 
 function showOrigin() {
@@ -117,8 +142,8 @@ function showOrigin() {
 	pop();
 }
 
-// const acceleration = 0.7;
-const acceleration = 2;
+const acceleration = 0.7;
+// const acceleration = 2;
 const rotSpeed = 0.13;
 
 function keyPressed() {
@@ -192,6 +217,18 @@ function makeWalkingSounds() {
 	}
 }
 
+function onCollision(c1, c2) {
+
+	if (c2 === pitFloorBlock) {
+
+		let lastPos = player.lastGround;
+		player.setPos(lastPos.x, lastPos.y, lastPos.z);
+		player.velX = 0;
+		player.velZ = 0;
+		damageSound.play();
+	}
+}
+
 function createRing(size, gridSize, gridOffsetXZ = 0, gridOffsetY = 0, isVisible = true) {
 
 	let ring = [];
@@ -218,22 +255,31 @@ function createRing(size, gridSize, gridOffsetXZ = 0, gridOffsetY = 0, isVisible
 	return ring;
 }
 
-function createTrackers(size, gridSize) {
+function createTriggers(size) {
 
-	let triggers = [];
-	--gridSize;
+	triggerBlocks = [];
+	triggerBlocks.push(new Block(size*2, 0, size, size, size, size));
+	triggerBlocks.push(new Block(size*4, 0, size, size, size, size));
+	triggerBlocks.push(new Block(size*5, 0, size*2, size, size, size));
+	triggerBlocks.push(new Block(size*5, 0, size*4, size, size, size));
+	triggerBlocks.push(new Block(size*4, 0, size*5, size, size, size));
+	triggerBlocks.push(new Block(size*2, 0, size*5, size, size, size));
+	triggerBlocks.push(new Block(size, 0, size*4, size, size, size));
+	triggerBlocks.push(new Block(size, 0, size*2, size, size, size));
 
-	triggers.push(new Block(size/2, 0, size/2, 2*size, size, 2*size));
-	triggers.push(new Block(size/2 + gridSize*size, 0, size/2, 2*size, size, 2*size));
-	triggers.push(new Block(size/2 + gridSize*size, 0, size/2 + gridSize*size, 2*size, size, 2*size));
-	triggers.push(new Block(size/2, 0, size/2 + gridSize*size, 2*size, size, 2*size));
-
-	triggers.forEach(tracker => {
+	triggerBlocks.forEach(tracker => {
 		tracker.hitbox.outline = color(255, 0, 0);
-		tracker.isVisible = false;
-		tracker.isSolid = false;
+		tracker.setAir(true);
 		physicsHandler.addCollidable(tracker);
 	});
+}
 
-	return triggers;
+function createPitBlocks() {
+
+	pitBlocks = [];
+	pitBlocks.push(new Block(2*blockSize, -10*blockSize, blockSize, blockSize/2, 10*blockSize, blockSize));
+	pitBlocks.push(new Block(4.5*blockSize, -10*blockSize, blockSize, blockSize/2, 10*blockSize, blockSize));
+	pitBlocks.push(new Block(2.5*blockSize, -10*blockSize, blockSize/2, 2*blockSize, 10*blockSize, blockSize/2));
+	pitBlocks.push(new Block(2.5*blockSize, -10*blockSize, 2*blockSize, 2*blockSize, 10*blockSize, blockSize/2));
+	pitBlocks.push(pitFloorBlock = new Block(2.5*blockSize, -10.5*blockSize, blockSize, 2*blockSize, blockSize/2, blockSize));
 }
