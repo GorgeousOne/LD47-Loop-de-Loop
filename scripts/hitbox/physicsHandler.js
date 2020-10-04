@@ -15,16 +15,9 @@ class PhysicsHandler {
 
 	removeCollidable(collidable) {
 
-		if(!collidable)
-			throw 'could not remove undefined collidable';
-
-		for(let i = 0; i < this.collidables.length; i++) {
-
-			if (this.collidables[i] === collidable) {
-
-				this.collidables.splice(i, 1);
-				return;
-			}
+		if (this.collidables.includes(collidable)) {
+			let i = this.collidables.indexOf(collidable);
+			this.collidables.splice(i, 1);
 		}
 	}
 

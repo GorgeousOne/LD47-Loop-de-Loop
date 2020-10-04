@@ -1,4 +1,4 @@
-class TriggerTask {
+class TriggerAction {
 
 	constructor(triggerDir, triggerAction) {
 		this.walkingDir = triggerDir;

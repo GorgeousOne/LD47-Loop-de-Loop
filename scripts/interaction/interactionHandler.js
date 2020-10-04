@@ -5,33 +5,28 @@ class InteractionHandler {
 		this.interactables = [];
 	}
 
-	addInteractable(interactable) {
-		this.interactables.push(interactable);
+	addInteractable(element) {
+		this.interactables.push(element);
 	}
 
-	removeInteractable(interactable) {
+	removeInteractable(element) {
 
-		if(!interactable)
-			throw 'could not remove undefined interactable';
-
-		for (let i = 0; i < this.interactables.length; i++) {
-
-			if (this.interactables[i] === interactable) {
-
-				this.interactables.splice(i, 1);
-				return;
-			}
+		if (this.interactables.includes(element)) {
+			let i = this.interactables.indexOf(element);
+			this.interactables.splice(i, 1);
 		}
 	}
 
-	checkHovering(ray) {
-		this.interactables.forEach(interactable => interactable.isHovered = interactable.intersects(ray));
+	checkForHoveredElements(ray) {
+		this.interactables.forEach(element => {
+			element.isHovered = element.isVisible && element.isEnabled && element.intersects(ray);
+		});
 	}
 
-	checkInteraction(ray) {
-		this.interactables.forEach(interactable => {
-			if (interactable.isHovered) {
-				interactable.onInteract();
+	interactWithHoveredElements() {
+		this.interactables.forEach(element => {
+			if (element.isHovered) {
+				element.fire();
 			}
 		});
 	}

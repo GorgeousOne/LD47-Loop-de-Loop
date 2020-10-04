@@ -1,9 +1,8 @@
 
-class triggerSystem {
+class TriggerSystem {
 
-	constructor(startNextTaskOnFinish = false) {
+	constructor(startNextTaskOnFinish = true) {
 
-		this.activeTriggers = [];
 		this.triggerActions = new Map();
 		this.triggersForCompletion = [];
 
@@ -14,20 +13,15 @@ class triggerSystem {
 
 	addTriggerAction(triggerIndex, action) {
 		this.triggerActions.set(triggerIndex, action);
-		print(this.triggerActions.has(triggerIndex) + " " + triggerIndex);
 	}
 
 	update(passedTriggers) {
 
+		this.executeTrigger(passedTriggers[0], this.getWalkingDir(passedTriggers));
+
 		if (this.triggersForCompletion.length > 0) {
 			this.checkTriggersToComplete(passedTriggers[0]);
-
-			if (this.isCompleted()) {
-				return;
-			}
 		}
-
-		this.executeTrigger(passedTriggers[0], this.getWalkingDir(passedTriggers));
 	}
 
 	getWalkingDir(passedTriggers) {
@@ -53,11 +47,10 @@ class triggerSystem {
 
 		let action = this.triggerActions.get(triggerIndex);
 
-		if (isNaN(walkingDir) || action.walkingDir === walkingDir) {
+		if (isNaN(walkingDir) || action.walkingDir === 0 || action.walkingDir === walkingDir) {
 			action.execute();
 		}
 	}
-
 
 	checkTriggersToComplete(lastTriggerIndex) {
 
@@ -69,6 +62,7 @@ class triggerSystem {
 
 		if (this.triggersForCompletion.length === 0) {
 			this.setCompleted();
+			print("- finished system " + this.isCompleted());
 		}
 	}
 

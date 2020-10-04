@@ -1,19 +1,30 @@
 
 class Interactable {
 
-	constructor() {
-		this.faces = [];
+	constructor(isEnabled = true, isVisible = true) {
+
+		this.isEnabled = isEnabled;
+		this.isVisible = isVisible;
+		this.clickableFaces = [];
+		this.onInteract = undefined;
 	}
 
-	display(color = color(255, 10, 0)) {
+	display() {
 
-		fill(color);
-		this.faces.forEach(face => face.display());
+		if (!this.isVisible) {
+			return;
+		}
+
+		this.clickableFaces.forEach(face => face.display());
 	}
 
 	intersects(ray) {
 
-		for(let face of this.faces){
+		if (!this.isEnabled) {
+			return;
+		}
+
+		for(let face of this.clickableFaces){
 			if (face.intersects(ray)) {
 				return true;
 			}
@@ -22,5 +33,9 @@ class Interactable {
 		return false;
 	}
 
-	onInteract() {}
+	fire() {
+		if (this.onInteract) {
+			this.onInteract();
+		}
+	}
 }

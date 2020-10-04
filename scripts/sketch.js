@@ -24,6 +24,8 @@ let stepSounds;
 let buttonSounds;
 let damageSound;
 
+let pitCloseButton;
+
 function preload() {
 
 	stepSounds = [];
@@ -62,6 +64,17 @@ function setup() {
 	physicsHandler.collisionListeners.push(this);
 	physicsHandler.collisionListeners.push(walkingHandler);
 
+	pitCloseButton = new Button(
+		3.5 * blockSize, blockSize/3, blockSize,
+		20, 10, createVector(0, 0, 1), false);
+
+	pitCloseButton.onInteract = () => {
+		pitCloseButton.isEnabled = false;
+		walkingHandler.currentSystem.triggersForCompletion.push(4);
+	};
+
+	interactionHandler.addInteractable(pitCloseButton);
+
 	smooth();
 	noStroke();
 }
@@ -78,13 +91,10 @@ function addPuzzleObject(object) {
 
 function removePuzzleObject(object) {
 
-	for(let i = 0; i < this.puzzleStuff.length; i++) {
-
-		if (this.puzzleStuff[i] === object) {
-			this.puzzleStuff.splice(i, 1);
-			physicsHandler.remove(object);
-			return;
-		}
+	if (puzzleStuff.includes(object)) {
+		let i = puzzleStuff.indexOf(object);
+		puzzleStuff.splice(i, 1);
+		physicsHandler.removeCollidable(object);
 	}
 }
 
@@ -106,8 +116,8 @@ function draw() {
 			physicsHandler.applyPhysics();
 		}
 
-		let dirRay = new Ray(player.eyeLoc(), player.facing(), 100);
-		interactionHandler.checkHovering(dirRay);
+		interactionHandler.checkForHoveredElements(new Ray(player.eyeLoc(), player.facing(), 150));
+
 	}else {
 		background(205);
 	}
@@ -127,7 +137,10 @@ function draw() {
 	innerWallBlocks.forEach(block => block.display());
 	outerWallBlocks.forEach(block => block.display());
 	triggerBlocks.forEach(block => block.display());
+	pitBlocks.forEach(block => block.display());
 	puzzleStuff.forEach(block => block.display());
+
+	pitCloseButton.display();
 }
 
 function showOrigin() {
@@ -140,6 +153,10 @@ function showOrigin() {
 	stroke(5, 5, 255);
 	line(5, 5, 5, 5, 5, 20);
 	pop();
+}
+
+function mousePressed() {
+	interactionHandler.interactWithHoveredElements();
 }
 
 const acceleration = 0.7;
@@ -213,7 +230,10 @@ function makeWalkingSounds() {
 
 	if (timeWalked >= stepSoundInterval) {
 		timeWalked %= stepSoundInterval;
-		stepSounds[Math.floor(Math.random() * stepSounds.length)].play();
+
+		if (player.isOnGround) {
+			// stepSounds[Math.floor(Math.random() * stepSounds.length)].play();
+		}
 	}
 }
 
@@ -225,6 +245,7 @@ function onCollision(c1, c2) {
 		player.setPos(lastPos.x, lastPos.y, lastPos.z);
 		player.velX = 0;
 		player.velZ = 0;
+		player.pitch = 0;
 		damageSound.play();
 	}
 }
@@ -282,4 +303,8 @@ function createPitBlocks() {
 	pitBlocks.push(new Block(2.5*blockSize, -10*blockSize, blockSize/2, 2*blockSize, 10*blockSize, blockSize/2));
 	pitBlocks.push(new Block(2.5*blockSize, -10*blockSize, 2*blockSize, 2*blockSize, 10*blockSize, blockSize/2));
 	pitBlocks.push(pitFloorBlock = new Block(2.5*blockSize, -10.5*blockSize, blockSize, 2*blockSize, blockSize/2, blockSize));
+
+	pitBlocks.forEach(tracker => {
+		physicsHandler.addCollidable(tracker);
+	});
 }
