@@ -1,45 +1,45 @@
 new p5();
 
-var showHitboxes = true;
+let showHitboxes = false;
 
 let physicsHandler;
 let interactionHandler;
+let walkingHandler;
 
 let player;
 let gameIsPaused = false;
 
-function preload() {
-}
-
 let floorBlocks;
 let innerWallBlocks;
 let outerWallBlocks;
+let trackerBlocks;
 
-let button;
+let blockSize = 200;
+
+let rndPuzzleStuff = [];
+
+function preload() {}
 
 function setup() {
 
 	createCanvas(windowWidth, windowHeight, WEBGL);
 	fullscreen();
-	smooth();
 
 	physicsHandler = new PhysicsHandler();
 	interactionHandler = new InteractionHandler();
 
-	player = new Player(100, 0, 300, 0);
+	player = new Player(1.2 * blockSize, 0, 1.2 * blockSize, 45);
 	physicsHandler.addCollidable(player);
 
-	let blockSize = 200;
 	floorBlocks = createRing(blockSize, 5, 1, -1, true);
-	innerWallBlocks = createRing(blockSize, 3, 2, 0, false);
-	outerWallBlocks = createRing(blockSize, 7, 0, 0, false);
+	innerWallBlocks = createRing(blockSize, 3, 2, 0, true);
+	outerWallBlocks = createRing(blockSize, 7, 0, 0, true);
 
-	button = new Button(
-		createVector(0, 50, 0),
-		10, 5,
-		createVector(0, 0, 1));
+	trackerBlocks = createTrackers(blockSize, 5);
+	walkingHandler = new WalkingHandler(trackerBlocks);
+	physicsHandler.collisionListeners.push(walkingHandler);
 
-	interactionHandler.addInteractable(button);
+	smooth();
 	noStroke();
 }
 
@@ -73,34 +73,37 @@ function draw() {
 	}
 
 	player.applyCam();
+	showOrigin();
 
 	let bright = 180;
 	let bright2 = 180;
 	ambientLight(bright, bright, bright);
-
 	directionalLight(bright2, bright2, bright2, player.dirX(), -3, player.dirZ());
-	// directionalLight(bright2, bright2, bright2, 0.5, -3, 1);
 
+	if (showHitboxes)
+		player.display();
+
+	floorBlocks.forEach(block => block.display());
+	innerWallBlocks.forEach(block => block.display());
+	outerWallBlocks.forEach(block => block.display());
+	trackerBlocks.forEach(block => block.display());
+	rndPuzzleStuff.forEach(block => block.display());
+}
+
+function showOrigin() {
 	push();
-	stroke(255, 0, 0);
-	line(0, 0, 0, 10, 0, 0);
-	stroke(0, 255, 0);
-	line(0, 0, 0, 0, 10, 0);
-	stroke(0, 0, 255);
-	line(0, 0, 0, 0, 0, 10);
-	pop();
-
-	player.display();
-	floorBlocks.forEach(brick => brick.display());
-	innerWallBlocks.forEach(brick => brick.display());
-	outerWallBlocks.forEach(brick => brick.display());
-
-	push();
-	button.display(button.isHovered ? color(255, 80, 80) : color(255, 40, 40));
+	stroke(255, 5, 5);
+	strokeWeight(3);
+	line(5, 5, 5, 20, 5, 5);
+	stroke(5, 255, 5);
+	line(5, 5, 5, 5, 20, 5);
+	stroke(5, 5, 255);
+	line(5, 5, 5, 5, 5, 20);
 	pop();
 }
 
-const acceleration = 0.7;
+// const acceleration = 0.7;
+const acceleration = 2;
 const rotSpeed = 0.13;
 
 function keyPressed() {
@@ -119,7 +122,7 @@ function movePlayer() {
 	player.rotate(-rotSpeed * movedX, -rotSpeed * movedY);
 
 	if (keyIsDown(32))
-		player.jump(5);
+		player.jump(7);
 
 	let motForwards = 0;
 	let motSidewards = 0;
@@ -181,19 +184,20 @@ function createRing(size, gridSize, gridOffsetXZ = 0, gridOffsetY = 0, isVisible
 
 function createTrackers(size, gridSize) {
 
-	let trackers = [];
+	let triggers = [];
+	--gridSize;
 
-	trackers.push(new Block(0, 0, 0, size, size, size));
-	trackers.push(new Block(gridSize*size, 0, 0, size, size, size));
-	trackers.push(new Block(gridSize*size, 0, gridSize*size, size, size, size));
-	trackers.push(new Block(0, 0, gridSize*size, size, size, size));
+	triggers.push(new Block(size/2, 0, size/2, 2*size, size, 2*size));
+	triggers.push(new Block(size/2 + gridSize*size, 0, size/2, 2*size, size, 2*size));
+	triggers.push(new Block(size/2 + gridSize*size, 0, size/2 + gridSize*size, 2*size, size, 2*size));
+	triggers.push(new Block(size/2, 0, size/2 + gridSize*size, 2*size, size, 2*size));
 
-	trackers.forEach(collider => {
-		collider.hitbox.outline = color(255, 0, 0);
-		collider.isVisible = false;
-		collider.isSolid = false;
-		physicsHandler.addCollidable(collider);
+	triggers.forEach(tracker => {
+		tracker.hitbox.outline = color(255, 0, 0);
+		tracker.isVisible = false;
+		tracker.isSolid = false;
+		physicsHandler.addCollidable(tracker);
 	});
 
-	return trackers;
+	return triggers;
 }

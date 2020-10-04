@@ -1,4 +1,5 @@
-const maxSpeed = 7;
+const maxSpeed = 15;
+// const maxSpeed = 7;
 
 class Player extends Collidable {
 

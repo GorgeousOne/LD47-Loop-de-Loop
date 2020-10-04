@@ -1,4 +1,4 @@
-const gravity = 0.2;
+const gravity = 0.3;
 const maxVel = 50;
 const friction = 0.8;
 
@@ -13,22 +13,30 @@ class PhysicsHandler {
 		this.collidables.push(collidable);
 	}
 
+	removeCollidable(collidable) {
 
+		if(!collidable)
+			throw 'could not remove undefined collidable';
 
-	// removeCollidable(collidable) {
-	//
-	// 	if(!collidable)
-	// 		throw 'could not remove undefined collidable';
-	//
-	// 	for(let i = 0; i < this.collidables.length; i++) {
-	//
-	// 		if (this.collidables[i] === collidable) {
-	//
-	// 			this.collidables.splice(i, 1);
-	// 			return;
-	// 		}
-	// 	}
-	// }
+		for(let i = 0; i < this.collidables.length; i++) {
+
+			if (this.collidables[i] === collidable) {
+
+				this.collidables.splice(i, 1);
+				return;
+			}
+		}
+	}
+
+	removeListener(listener) {
+
+		for(let i = 0; i < this.collisionListeners.length; i++) {
+			if (this.collisionListeners[i] === listener) {
+				this.collisionListeners.splice(i, 1);
+				return;
+			}
+		}
+	}
 
 	applyPhysics() {
 
@@ -45,6 +53,8 @@ class PhysicsHandler {
 	}
 
 	callCollision(c1, c2) {
-
+		this.collisionListeners.forEach(listener => {
+			listener.onCollision(c1, c2);
+		});
 	}
 }

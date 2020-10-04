@@ -1,11 +1,16 @@
-
 class Block extends Collidable {
 
 	constructor(x, y, z, widthX, height, widthZ) {
 
-		super(x+widthX/2, y, z+widthZ/2, widthX, height, widthZ);
+		super(x + widthX / 2, y, z + widthZ / 2, widthX, height, widthZ);
 
 		this.isVisible = true;
+	}
+
+	//do i need to override that?
+	setPos(x, y, z) {
+		this.pos.set(x + this.hitbox.widthX / 2, y, z + this.hitbox.widthZ / 2);
+		this.hitbox.setPos(this.pos.x, this.pos.y, this.pos.z);
 	}
 
 	display(c = color(255)) {

@@ -114,12 +114,6 @@ class Collidable {
 				if (intersectionDir === -1) {
 					this.isOnGround = true;
 				}
-
-			} else if (this.isOnGround) {
-				//half the velocity when losing ground
-				this.velX /= 2;
-				this.velZ /= 2;
-				this.isOnGround = false
 			}
 
 			physicsHandler.callCollision(this, otherCollidable);
