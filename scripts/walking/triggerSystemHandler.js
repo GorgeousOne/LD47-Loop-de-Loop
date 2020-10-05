@@ -1,6 +1,5 @@
-let gameIsClockWise;
 
-class WalkingHandler {
+class TriggerSystemHandler {
 
 	constructor(triggerBlocks) {
 
@@ -9,15 +8,21 @@ class WalkingHandler {
 		this.triggerSystems = [];
 
 		this.createSystem1();
-		this.nextSystem();
+		this.createSystem2();
+		this.createSystem3();
+		this.createSystem4();
+
+		this.currentSystem = this.triggerSystems[0];
 	}
 
 	nextSystem() {
 
+		this.triggerSystems.shift();
+
 		if (this.triggerSystems.length > 0) {
 			print("switching to next task");
 			this.currentSystem = this.triggerSystems[0];
-		}else {
+		} else {
 			this.currentSystem = undefined;
 		}
 	}
@@ -39,7 +44,7 @@ class WalkingHandler {
 		}
 
 		if (this.passedTriggers.length > 0) {
-			print("passing " + index + " prev: " + this.passedTriggers[0]);
+			// print("passing " + index + " prev: " + this.passedTriggers[0]);
 		}
 
 		this.passedTriggers.unshift(index);
@@ -49,12 +54,9 @@ class WalkingHandler {
 			return;
 		}
 
-		this.triggerSystems.shift();
-
 		if (this.currentSystem.startNextTaskOnFinish) {
 			this.nextSystem();
-		}else {
-			print("RESET");
+		} else {
 			this.currentSystem = undefined;
 		}
 	}
@@ -71,6 +73,11 @@ class WalkingHandler {
 
 		let triggerAction1 = new TriggerAction(1, () => {
 			this.blockade.setPos(blockSize, 0, 5 * blockSize);
+
+			//pit should only be activated when walking right, so kinda reset the first trigger to pass
+			if (system.triggersForCompletion.length === 1) {
+				system.triggersForCompletion.push(6);
+			}
 		});
 
 		system.addTriggerAction(0, triggerAction0);
@@ -82,7 +89,7 @@ class WalkingHandler {
 			floorBlocks[5].setAir(true);
 			floorBlocks[7].setAir(true);
 			floorBlocks[9].setAir(true);
-			this.createSystem2();
+			// lastCheckPoint = new Checkpoint(createVector(2 * blockSize, 0, 1.5 * blockSize), 0);
 		};
 
 		this.triggerSystems.push(system);
@@ -90,47 +97,64 @@ class WalkingHandler {
 
 	createSystem2() {
 
-		print("creating second task");
-		let system = new TriggerSystem();
-		gameIsClockWise = this.passedTriggers[0] === 6;
-
-		system.triggersForCompletion.push(gameIsClockWise ? 0 : 1);
-		system.onCompleteAction = () => {
-			print("remove blockade");
-			removePuzzleObject(this.blockade);
-			this.createSystem3();
-		};
-
-		this.triggerSystems.push(system);
-	}
-
-	createSystem3() {
-
 		let system = new TriggerSystem(false);
 
-		let showButtonAction = new TriggerAction(gameIsClockWise ? -1 : 1, () => {
+		let removeBlockadeAction = new TriggerAction(0, () => {
+			if (this.blockade.isVisible) {
+				removePuzzleObject(this.blockade);
+				this.blockade.isVisible = false;
+			}
+		});
+
+		let showButtonAction = new TriggerAction(-1, () => {
 			floorBlocks[5].setAir(false);
 			floorBlocks[7].setAir(false);
 			floorBlocks[9].setAir(false);
 			pitCloseButton.isVisible = true;
 		});
 
-		let showPitAction = new TriggerAction(gameIsClockWise ? 1 : -1, () => {
+		let showPitAction = new TriggerAction(1, () => {
 			floorBlocks[5].setAir(true);
 			floorBlocks[7].setAir(true);
 			floorBlocks[9].setAir(true);
 			pitCloseButton.isVisible = false;
 		});
 
-		system.addTriggerAction(gameIsClockWise ? 4 : 5, showButtonAction);
-		system.addTriggerAction(gameIsClockWise ? 5 : 4, showPitAction);
+		system.addTriggerAction(0, removeBlockadeAction);
+		system.addTriggerAction(4, showButtonAction);
+		system.addTriggerAction(5, showPitAction);
 		this.triggerSystems.push(system);
+	}
 
-		system.onCompleteAction = () => {
-			floorBlocks[5].setAir(false);
-			floorBlocks[7].setAir(false);
-			floorBlocks[9].setAir(false);
-			pitCloseButton.isVisible = false;
-		}
+	createSystem3() {
+
+		let system = new TriggerSystem(true);
+
+		let showMural = new TriggerAction(1, () => {
+
+			if (pitCloseButton.isVisible) {
+
+				print("-- painting mural ---");
+				pitCloseButton.isVisible = false;
+				wallMural.isVisible = true;
+				system.setCompleted();
+			}
+		});
+
+		system.addTriggerAction(5, showMural);
+
+		this.triggerSystems.push(system);
+	}
+
+	createSystem4() {
+
+		let system = new TriggerSystem(true);
+
+		let showButtonPuzzle = new TriggerAction(1, () => {
+			fiveButtons.forEach(button => button.isVisible = true);
+		});
+
+		system.addTriggerAction(2, showButtonPuzzle);
+		this.triggerSystems.push(system);
 	}
 }

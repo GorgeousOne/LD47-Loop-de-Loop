@@ -18,7 +18,7 @@ class Hitbox {
 		this.pos.set(x, y, z);
 	}
 
-	move(dx, dy, dz) {
+	translate(dx, dy, dz) {
 		this.pos.add(dx, dy, dz);
 	}
 

@@ -23,6 +23,11 @@ class Collidable {
 		this.hitbox.setPos(x, y, z);
 	}
 
+	translate(dx, dy, dz) {
+		this.pos.add(dx, dy, dz);
+		this.hitbox.translate(dx, dy, dz);
+	}
+
 	updateX(collidables) {
 		if (this.velX !== 0)
 			this.moveX(this.velX, collidables);
@@ -139,16 +144,16 @@ class Collidable {
 
 	translateX(dx) {
 		this.pos.add(dx, 0, 0);
-		this.hitbox.move(dx, 0, 0);
+		this.hitbox.translate(dx, 0, 0);
 	}
 
 	translateY(dy) {
 		this.pos.add(0, dy, 0);
-		this.hitbox.move(0, dy, 0);
+		this.hitbox.translate(0, dy, 0);
 	}
 
 	translateZ(dz) {
 		this.pos.add(0, 0, dz);
-		this.hitbox.move(0, 0, dz);
+		this.hitbox.translate(0, 0, dz);
 	}
 }

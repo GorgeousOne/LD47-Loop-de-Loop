@@ -45,6 +45,7 @@ class TriggerSystem {
 			return;
 		}
 
+		print ("reactin on trigger " + triggerIndex);
 		let action = this.triggerActions.get(triggerIndex);
 
 		if (isNaN(walkingDir) || action.walkingDir === 0 || action.walkingDir === walkingDir) {

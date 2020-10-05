@@ -4,7 +4,7 @@ let showHitboxes = false;
 
 let physicsHandler;
 let interactionHandler;
-let walkingHandler;
+let triggerHandler;
 
 let player;
 let gameIsPaused = false;
@@ -19,12 +19,21 @@ let pitBlocks;
 let pitFloorBlock;
 
 let puzzleStuff = [];
+let lastCheckPoint;
 
 let stepSounds;
-let buttonSounds;
+let buttonSound;
 let damageSound;
+let correctSound;
+let wrongSound;
 
 let pitCloseButton;
+let fiveButtons;
+let buttonClickOrder;
+let playerButtonClickOrder;
+
+let mural;
+let wallMural;
 
 function preload() {
 
@@ -35,11 +44,13 @@ function preload() {
 	stepSounds.push(loadSound('assets/step4.mp3'));
 	stepSounds.push(loadSound('assets/step5.mp3'));
 
-	buttonSounds = [];
-	buttonSounds.push(loadSound('assets/button1.mp3'));
-	buttonSounds.push(loadSound('assets/button2.mp3'));
+	buttonSound = loadSound('assets/button2.mp3');
+
+	correctSound = loadSound('assets/correct.mp3');
+	wrongSound = loadSound('assets/wrong.mp3');
 
 	damageSound = loadSound('assets/damage2.mp3');
+	mural = loadImage('assets/days-passed2.png');
 }
 
 function setup() {
@@ -53,27 +64,19 @@ function setup() {
 	player = new Player(3.2 * blockSize, 0, 1.2 * blockSize, 45);
 	physicsHandler.addCollidable(player);
 
-	floorBlocks = createRing(blockSize, 5, 1, -1, true);
-	innerWallBlocks = createRing(blockSize, 3, 2, 0, true);
-	outerWallBlocks = createRing(blockSize, 7, 0, 0, true);
+	floorBlocks = createRing(blockSize, 10*blockSize, 5, 1, -10, true);
+	innerWallBlocks = createRing(blockSize, 11*blockSize, 3, 2, -10, true);
+	outerWallBlocks = createRing(blockSize, 11*blockSize, 7, 0, -10, true);
 
 	createTriggers(blockSize, 5);
 	createPitBlocks();
 
-	walkingHandler = new WalkingHandler(triggerBlocks);
+	triggerHandler = new TriggerSystemHandler(triggerBlocks);
 	physicsHandler.collisionListeners.push(this);
-	physicsHandler.collisionListeners.push(walkingHandler);
+	physicsHandler.collisionListeners.push(triggerHandler);
 
-	pitCloseButton = new Button(
-		3.5 * blockSize, blockSize/3, blockSize,
-		20, 10, createVector(0, 0, 1), false);
-
-	pitCloseButton.onInteract = () => {
-		pitCloseButton.isEnabled = false;
-		walkingHandler.currentSystem.triggersForCompletion.push(4);
-	};
-
-	interactionHandler.addInteractable(pitCloseButton);
+	createButtons();
+	wallMural = new Drawable(mural, createVector(3*blockSize, 0, 2*blockSize-0.01), blockSize, blockSize, 0, false);
 
 	smooth();
 	noStroke();
@@ -137,10 +140,14 @@ function draw() {
 	innerWallBlocks.forEach(block => block.display());
 	outerWallBlocks.forEach(block => block.display());
 	triggerBlocks.forEach(block => block.display());
-	pitBlocks.forEach(block => block.display());
 	puzzleStuff.forEach(block => block.display());
 
+	pitBlocks.forEach(block => block.display());
+	pitFloorBlock.display();
+
 	pitCloseButton.display();
+	fiveButtons.forEach(button => button.display());
+	wallMural.display();
 }
 
 function showOrigin() {
@@ -241,16 +248,12 @@ function onCollision(c1, c2) {
 
 	if (c2 === pitFloorBlock) {
 
-		let lastPos = player.lastGround;
-		player.setPos(lastPos.x, lastPos.y, lastPos.z);
-		player.velX = 0;
-		player.velZ = 0;
-		player.pitch = 0;
+		lastCheckPoint.tpPlayer();
 		damageSound.play();
 	}
 }
 
-function createRing(size, gridSize, gridOffsetXZ = 0, gridOffsetY = 0, isVisible = true) {
+function createRing(width, height, gridSize, gridOffsetXZ = 0, gridOffsetY = 0, isVisible = true) {
 
 	let ring = [];
 
@@ -262,10 +265,10 @@ function createRing(size, gridSize, gridOffsetXZ = 0, gridOffsetY = 0, isVisible
 			}
 
 			let block = new Block(
-				(gridOffsetXZ + x) * size,
-				gridOffsetY * size,
-				(gridOffsetXZ + z) * size,
-				size, size, size);
+				(gridOffsetXZ + x) * blockSize,
+				gridOffsetY * blockSize,
+				(gridOffsetXZ + z) * blockSize,
+				width, height, width);
 
 			block.isVisible = isVisible;
 			ring.push(block);
@@ -300,11 +303,87 @@ function createPitBlocks() {
 	pitBlocks = [];
 	pitBlocks.push(new Block(2*blockSize, -10*blockSize, blockSize, blockSize/2, 10*blockSize, blockSize));
 	pitBlocks.push(new Block(4.5*blockSize, -10*blockSize, blockSize, blockSize/2, 10*blockSize, blockSize));
-	pitBlocks.push(new Block(2.5*blockSize, -10*blockSize, blockSize/2, 2*blockSize, 10*blockSize, blockSize/2));
-	pitBlocks.push(new Block(2.5*blockSize, -10*blockSize, 2*blockSize, 2*blockSize, 10*blockSize, blockSize/2));
-	pitBlocks.push(pitFloorBlock = new Block(2.5*blockSize, -10.5*blockSize, blockSize, 2*blockSize, blockSize/2, blockSize));
 
-	pitBlocks.forEach(tracker => {
-		physicsHandler.addCollidable(tracker);
+	pitBlocks.forEach(block => {
+		physicsHandler.addCollidable(block);
 	});
+
+	pitFloorBlock = new Block(blockSize, -10.5*blockSize, blockSize, 5*blockSize, blockSize/2, 5*blockSize);
+	physicsHandler.addCollidable(pitFloorBlock);
+}
+
+function createButtons() {
+
+	pitCloseButton = new Button(
+		3.5 * blockSize, blockSize/3, blockSize,
+		20, 10, createVector(0, 0, 1), false);
+
+	pitCloseButton.onInteract = () => {
+		buttonSound.play();
+		pitCloseButton.isEnabled = false;
+		triggerHandler.nextSystem();
+	};
+
+	interactionHandler.addInteractable(pitCloseButton);
+
+	fiveButtons = [];
+	buttonClickOrder = [3, 5, 4, 1, 2];
+	playerButtonClickOrder = [];
+
+	for (let i = 1; i < 6; ++i) {
+
+		let button = new Button(
+			2 * blockSize + i * blockSize/2,
+			blockSize/3,
+			6* blockSize,
+			20, 10, createVector(0, 0, -1), false);
+
+		button.onInteract = () => {
+
+			buttonSound.play();
+			button.isEnabled = false;
+			playerButtonClickOrder.push(i);
+
+			if (playerButtonClickOrder.length !== buttonClickOrder.length) {
+				return;
+			}
+
+			if (!playerClickedCorrectly()) {
+				wrongSound.play();
+				floorBlocks[4].setAir(true);
+				floorBlocks[6].setAir(true);
+				floorBlocks[8].setAir(true);
+				floorBlocks[10].setAir(true);
+				floorBlocks[15].setAir(true);
+
+				lastCheckPoint = new Checkpoint(createVector(3.5*blockSize, 0, 1.2*blockSize), 70);
+				lastCheckPoint.onResetLvl = () => {
+
+					floorBlocks[4].setAir(false);
+					floorBlocks[6].setAir(false);
+					floorBlocks[8].setAir(false);
+					floorBlocks[10].setAir(false);
+					floorBlocks[15].setAir(false);
+
+					fiveButtons.forEach(button => button.isEnabled = true);
+				}
+
+			}else {
+				correctSound.play();
+			}
+		};
+
+		fiveButtons.push(button);
+		interactionHandler.addInteractable(button);
+	}
+
+	function playerClickedCorrectly() {
+
+		for (let i = 0; i < buttonClickOrder.length; ++i) {
+			if (playerButtonClickOrder[i] !== buttonClickOrder[i]) {
+				return false;
+			}
+		}
+		return true;
+	}
 }
