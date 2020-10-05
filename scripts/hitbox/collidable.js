@@ -1,6 +1,6 @@
 class Collidable {
 
-	constructor(x, y, z, widthX, height, widthZ, isCollidable = true, hasGravity = false) {
+	constructor(x, y, z, widthX, height, widthZ, isCollidable = true, isRigid = true, hasGravity = false) {
 
 		this.pos = createVector(x, y, z);
 		this.hitbox = new Hitbox(x, y, z, widthX, height, widthZ);
@@ -10,11 +10,10 @@ class Collidable {
 		this.velZ = 0;
 
 		this.isSolid = isCollidable;
+		this.isRigid = isRigid;
 		this.hasGravity = hasGravity;
 
 		this.isOnGround = false;
-		this.lastGround = undefined;
-
 		this.isBeingControlled = false;
 	}
 
@@ -124,7 +123,6 @@ class Collidable {
 
 				if (intersectionDir === -1) {
 					this.isOnGround = true;
-					this.lastGround = this.pos.copy();
 				}
 			}
 		}
@@ -135,8 +133,9 @@ class Collidable {
 		let intersections = [];
 
 		for (let other of collidables) {
-			if (other !== this && this.hitbox.intersects(other.hitbox))
+			if (other !== this && this.hitbox.intersects(other.hitbox)) {
 				intersections.push(other);
+			}
 		}
 
 		return intersections;

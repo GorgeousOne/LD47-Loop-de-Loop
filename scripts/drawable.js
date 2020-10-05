@@ -7,15 +7,9 @@ class Drawable {
 		this.p1 = pos.copy().add(widthX, height, widthZ);
 		this.p2 = pos.copy().add(widthX, 0, widthZ);
 		this.p3 = pos.copy();
-
-		this.isVisible = isVisible;
 	}
 
 	display() {
-
-		if (!this.isVisible) {
-			return;
-		}
 
 		push();
 		noFill();
