@@ -43,10 +43,6 @@ class TriggerSystemHandler {
 			return;
 		}
 
-		if (this.passedTriggers.length > 0) {
-			// print("passing " + index + " prev: " + this.passedTriggers[0]);
-		}
-
 		this.passedTriggers.unshift(index);
 		this.currentSystem.update(this.passedTriggers);
 
@@ -89,7 +85,7 @@ class TriggerSystemHandler {
 			floorBlocks[5].setAir(true);
 			floorBlocks[7].setAir(true);
 			floorBlocks[9].setAir(true);
-			// lastCheckPoint = new Checkpoint(createVector(2 * blockSize, 0, 1.5 * blockSize), 0);
+			lastCheckPoint = new Checkpoint(createVector(2 * blockSize, 0, 1.5 * blockSize), 0);
 		};
 
 		this.triggerSystems.push(system);

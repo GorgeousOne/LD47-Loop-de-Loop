@@ -44,12 +44,11 @@ function preload() {
 	stepSounds.push(loadSound('assets/step4.mp3'));
 	stepSounds.push(loadSound('assets/step5.mp3'));
 
+	damageSound = loadSound('assets/damage2.mp3');
 	buttonSound = loadSound('assets/button2.mp3');
-
 	correctSound = loadSound('assets/correct.mp3');
 	wrongSound = loadSound('assets/wrong.mp3');
 
-	damageSound = loadSound('assets/damage2.mp3');
 	mural = loadImage('assets/days-passed2.png');
 }
 
@@ -106,10 +105,12 @@ let frameInterval = 1000 / 60;
 
 function draw() {
 
+	let lightLv = (1 + player.pos.y / (11*blockSize));
+
 	if (!gameIsPaused) {
 
 		requestPointerLock();
-		background(145, 202, 255);
+		background(lightLv*145, lightLv*202, lightLv*255);
 
 		accumulator += deltaTime;
 
@@ -122,16 +123,17 @@ function draw() {
 		interactionHandler.checkForHoveredElements(new Ray(player.eyeLoc(), player.facing(), 150));
 
 	}else {
-		background(205);
+		background(lightLv * 205);
 	}
 
 	player.applyCam();
 	showOrigin();
 
-	let bright = 180;
-	let bright2 = 180;
+	//if player falls it becomes darker;
+	let bright = Math.min(180, 180 * lightLv);
+
 	ambientLight(bright, bright, bright);
-	directionalLight(bright2, bright2, bright2, player.dirX(), -3, player.dirZ());
+	directionalLight(bright, bright, bright, player.dirX(), -3, player.dirZ());
 
 	if (showHitboxes)
 		player.display();
@@ -239,7 +241,7 @@ function makeWalkingSounds() {
 		timeWalked %= stepSoundInterval;
 
 		if (player.isOnGround) {
-			// stepSounds[Math.floor(Math.random() * stepSounds.length)].play();
+			stepSounds[Math.floor(Math.random() * stepSounds.length)].play();
 		}
 	}
 }
@@ -366,6 +368,7 @@ function createButtons() {
 					floorBlocks[15].setAir(false);
 
 					fiveButtons.forEach(button => button.isEnabled = true);
+					playerButtonClickOrder = [];
 				}
 
 			}else {
