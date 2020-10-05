@@ -1,5 +1,6 @@
 new p5();
 
+let startTime = Date.now();
 let showHitboxes = false;
 
 let physicsHandler;
@@ -183,12 +184,22 @@ function draw() {
 
 	pitFloorBlock.display();
 
+	let dStart = Date.now() - startTime;
+	if (dStart < 4000) {
+		let blend = 1 - Math.max(0, dStart - 3000) / 1000;
+		camera(0, 0, 10 / tan(radians(FOV/2)), 0, 0, 0, 0, 1, 0);
+		fill(color(0, 255 * blend));
+		textFont(font);
+		textSize(1);
+		text("press P to pause any time", -10, -10 + 1);
+	}
+
 	if (showFinishScreen) {
-		camera(0, 0, (height/2.0) / tan(PI*30.0 / 180.0), 0, 0, 0, 0, 1, 0);
+		camera(0, 0, (height/2.0) / tan(radians(FOV/2)), 0, 0, 0, 0, 1, 0);
 		fill(color(0));
 		textFont(font);
-		textSize(height / 5);
-		text("Thx  for  playing    :D", -width/2, 0);
+		textSize(height / 6);
+		text("  Thx  for  playing    :D", -width/2, 0);
 	}
 }
 
@@ -466,7 +477,7 @@ function createButtons() {
 			buttonSound.play();
 			fiveButtons.forEach(button => removePuzzleObject(button));
 
-			let fakeBlock = new Block(2*blockSize+1, 0, 3*blockSize, blockSize, blockSize, blockSize);
+			let fakeBlock = new Block(2*blockSize+1, 0.01, 3*blockSize+0.01, blockSize, blockSize, blockSize-0.02);
 			fakeBlock.isSolid = false;
 
 			innerWallBlocks[1].translate(0, -blockSize, 0);
