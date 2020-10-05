@@ -16,10 +16,11 @@ let outerWallBlocks;
 let crackedBlocks;
 let triggerBlocks;
 
+let blockade;
 let pitBlocks;
 let pitFloorBlock;
 
-let puzzleStuff = [];
+let puzzleStuff;
 let lastCheckPoint;
 
 let stepSounds;
@@ -33,11 +34,15 @@ let fiveButtons;
 let buttonClickOrder;
 let playerButtonClickOrder;
 
-let secondParkourButton;
+let parkourEndButton;
+let finishButton;
 
 let muralImg;
 let wallMural;
 let cracksTex;
+
+let showFinishScreen = false;
+let font;
 
 function preload() {
 
@@ -55,12 +60,15 @@ function preload() {
 
 	muralImg = loadImage('assets/textures/days-passed2.png');
 	cracksTex = loadImage('assets/textures/crackles.png');
+	font = loadFont('assets/SourceSansPro-Regular.ttf');
 }
 
 function setup() {
 
 	createCanvas(windowWidth, windowHeight, WEBGL);
 	fullscreen();
+
+	puzzleStuff = [];
 
 	physicsHandler = new PhysicsHandler();
 	interactionHandler = new InteractionHandler();
@@ -69,10 +77,13 @@ function setup() {
 	physicsHandler.addCollidable(player);
 
 	floorBlocks = createRing(blockSize, 10*blockSize, 5, 1, -10, true);
+	outerWallBlocks = createRing(blockSize, 11*blockSize, 7, 0, -10, true);
 	innerWallBlocks = createRing(blockSize, 11*blockSize, 3, 2, -10, true);
-	outerWallBlocks = createRing(blockSize, 11*blockSize, 7, 0, -10, false);
 
-	createTriggers(blockSize, 5);
+	addPuzzleObject(new Block(3*blockSize, -blockSize, 3*blockSize, blockSize, blockSize, blockSize));
+	blockade = new Block(-300, 0, -300, blockSize, blockSize, blockSize);
+
+	createTriggers();
 	createPitBlocks();
 	createCrackedBlocks();
 
@@ -93,16 +104,36 @@ function windowResized() {
 }
 
 function addPuzzleObject(object) {
+
+	if (puzzleStuff.includes(object)) {
+		return;
+	}
+
 	puzzleStuff.push(object);
-	physicsHandler.addCollidable(object);
+
+	if (object.hitbox) {
+		physicsHandler.addCollidable(object);
+
+	}else if (object.clickableFaces) {
+		interactionHandler.addInteractable(object);
+		object.isVisible = true;
+	}
 }
 
 function removePuzzleObject(object) {
 
 	if (puzzleStuff.includes(object)) {
+
 		let i = puzzleStuff.indexOf(object);
 		puzzleStuff.splice(i, 1);
-		physicsHandler.removeCollidable(object);
+
+		if (object.hitbox) {
+			physicsHandler.removeCollidable(object);
+
+		}else if (object.clickableFaces) {
+			interactionHandler.removeInteractable(object);
+			object.isVisible = false;
+		}
 	}
 }
 
@@ -116,7 +147,6 @@ function draw() {
 	if (!gameIsPaused) {
 
 		requestPointerLock();
-
 		accumulator += deltaTime;
 
 		while (accumulator > frameInterval) {
@@ -126,16 +156,17 @@ function draw() {
 		}
 
 		interactionHandler.checkForHoveredElements(new Ray(player.eyeLoc(), player.facing(), 150));
-	}else {
+
+	}else if (!showFinishScreen) {
 		lightLv = 0.6;
 	}
 
 	background(lightLv*145, lightLv*202, lightLv*255);
 
 	player.applyCam();
-	showOrigin();
+	// showOrigin();
 
-	//if player falls it becomes darker;
+	//if player falls it becomes darker ... and brighter when floating upwards
 	let bright = Math.min(180, 180 * lightLv);
 
 	ambientLight(bright, bright, bright);
@@ -150,14 +181,15 @@ function draw() {
 	triggerBlocks.forEach(block => block.display());
 	puzzleStuff.forEach(stuff => stuff.display());
 
-	crackedBlocks.forEach(block => block.display());
-
-	pitBlocks.forEach(block => block.display());
 	pitFloorBlock.display();
 
-	pitCloseButton.display();
-	fiveButtons.forEach(button => button.display());
-	wallMural.display();
+	if (showFinishScreen) {
+		camera(0, 0, (height/2.0) / tan(PI*30.0 / 180.0), 0, 0, 0, 0, 1, 0);
+		fill(color(0));
+		textFont(font);
+		textSize(height / 5);
+		text("Thx  for  playing    :D", -width/2, 0);
+	}
 }
 
 function showOrigin() {
@@ -177,12 +209,11 @@ function mousePressed() {
 }
 
 const acceleration = 0.7;
-// const acceleration = 2;
 const rotSpeed = 0.13;
 
 function keyPressed() {
 
-	if (keyCode === 27 || keyCode === 80) {
+	if (keyCode === ENTER || keyCode === 80) {
 
 		if (gameIsPaused) {
 			gameIsPaused = false;
@@ -249,7 +280,7 @@ function makeWalkingSounds() {
 		timeWalked %= stepSoundInterval;
 
 		if (player.isOnGround) {
-			// stepSounds[Math.floor(Math.random() * stepSounds.length)].play();
+			stepSounds[Math.floor(Math.random() * stepSounds.length)].play();
 		}
 	}
 }
@@ -303,17 +334,17 @@ function createRing(width, height, gridSize, gridOffsetXZ = 0, gridOffsetY = 0, 
 	return ring;
 }
 
-function createTriggers(size) {
+function createTriggers() {
 
 	triggerBlocks = [];
-	triggerBlocks.push(new Block(size*2, 0, size, size, size, size));
-	triggerBlocks.push(new Block(size*4, 0, size, size, size, size));
-	triggerBlocks.push(new Block(size*5, 0, size*2, size, size, size));
-	triggerBlocks.push(new Block(size*5, 0, size*4, size, size, size));
-	triggerBlocks.push(new Block(size*4, 0, size*5, size, size, size));
-	triggerBlocks.push(new Block(size*2, 0, size*5, size, size, size));
-	triggerBlocks.push(new Block(size, 0, size*4, size, size, size));
-	triggerBlocks.push(new Block(size, 0, size*2, size, size, size));
+	triggerBlocks.push(new Block(blockSize*2, 0, blockSize, blockSize, blockSize, blockSize));
+	triggerBlocks.push(new Block(blockSize*4, 0, blockSize, blockSize, blockSize, blockSize));
+	triggerBlocks.push(new Block(blockSize*5, 0, blockSize*2, blockSize, blockSize, blockSize));
+	triggerBlocks.push(new Block(blockSize*5, 0, blockSize*4, blockSize, blockSize, blockSize));
+	triggerBlocks.push(new Block(blockSize*4, 0, blockSize*5, blockSize, blockSize, blockSize));
+	triggerBlocks.push(new Block(blockSize*2, 0, blockSize*5, blockSize, blockSize, blockSize));
+	triggerBlocks.push(new Block(blockSize, 0, blockSize*4, blockSize, blockSize, blockSize));
+	triggerBlocks.push(new Block(blockSize, 0, blockSize*2, blockSize, blockSize, blockSize));
 
 	triggerBlocks.forEach(tracker => {
 		tracker.hitbox.outline = color(255, 0, 0);
@@ -358,8 +389,6 @@ function createCrackedBlocks() {
 
 	crackedBlocks.forEach(block => {
 		block.texture = cracksTex;
-		block.setAir(true);
-		physicsHandler.addCollidable(block);
 	});
 }
 
@@ -374,8 +403,6 @@ function createButtons() {
 		pitCloseButton.isEnabled = false;
 		triggerHandler.currentSystem.setCompleted();
 	};
-
-	interactionHandler.addInteractable(pitCloseButton);
 
 	fiveButtons = [];
 	buttonClickOrder = [3, 5, 4, 1, 2];
@@ -399,7 +426,12 @@ function createButtons() {
 				return;
 			}
 
-			if (!playerClickedCorrectly()) {
+			if (playerClickedCorrectly()) {
+
+				correctSound.play();
+				triggerHandler.currentSystem.setCompleted();
+
+			}else {
 				wrongSound.play();
 				floorBlocks[4].setAir(true);
 				floorBlocks[6].setAir(true);
@@ -419,17 +451,49 @@ function createButtons() {
 					fiveButtons.forEach(button => button.isEnabled = true);
 					playerButtonClickOrder = [];
 				}
-
-			}else {
-				correctSound.play();
-				triggerHandler.currentSystem.setCompleted();
 			}
 		};
 
 		fiveButtons.push(button);
-		interactionHandler.addInteractable(button);
 
-		// secondParkourButton = new Button()
+		parkourEndButton = new Button(
+			5.5 * blockSize, blockSize/3, 4 * blockSize,
+			20, 10, createVector(0, 0, -1));
+
+		parkourEndButton.onInteract = () => {
+
+			parkourEndButton.isEnabled = false;
+			buttonSound.play();
+			fiveButtons.forEach(button => removePuzzleObject(button));
+
+			let fakeBlock = new Block(2*blockSize+1, 0, 3*blockSize, blockSize, blockSize, blockSize);
+			fakeBlock.isSolid = false;
+
+			innerWallBlocks[1].translate(0, -blockSize, 0);
+			floorBlocks[4].translate(0, blockSize, 0);
+			triggerBlocks[6].translate(0, 0, -blockSize);
+			addPuzzleObject(fakeBlock);
+			addPuzzleObject(finishButton);
+
+			lastCheckPoint.onResetLv = () => {
+				parkourEndButton.isEnabled = true;
+				crackedBlocks.forEach(block => block.replace());
+				innerWallBlocks[1].translate(0, blockSize, 0);
+				floorBlocks[4].translate(0, -blockSize, 0);
+			};
+		};
+
+		finishButton = new Button(3.5*blockSize, blockSize/3, 3.5*blockSize, 30, 30, createVector(1, 0 ,0));
+		finishButton.color = color(30, 30, 230);
+		finishButton.hoverColor = color(48, 107, 255);
+
+		finishButton.onInteract = () => {
+
+			buttonSound.play();
+			player.hasGravity = false;
+			player.velY = 1;
+			showFinishScreen = true;
+		}
 	}
 
 	function playerClickedCorrectly() {

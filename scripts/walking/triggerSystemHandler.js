@@ -7,11 +7,11 @@ class TriggerSystemHandler {
 		this.passedTriggers = [];
 		this.triggerSystems = [];
 
-		// this.createMovingBlockade();
-		// this.createBlockRemover();
-		// this.createPit();
-		// this.createButtonPuzzle();
-		this.createParkour();
+		this.createMovingBlockade();
+		this.createBlockRemover();
+		this.createPitPuzzle();
+		this.createRemovePit();
+		this.createFiveButtons();
 
 		this.currentSystem = this.triggerSystems[0];
 	}
@@ -21,7 +21,6 @@ class TriggerSystemHandler {
 		this.triggerSystems.shift();
 
 		if (this.triggerSystems.length > 0) {
-			print("switching to next task");
 			this.currentSystem = this.triggerSystems[0];
 		} else {
 			this.currentSystem = undefined;
@@ -61,31 +60,36 @@ class TriggerSystemHandler {
 	createMovingBlockade() {
 
 		let system = new TriggerSystem();
-		this.blockade = new Block(-300, 0, -300, blockSize, blockSize, blockSize);
-		addPuzzleObject(this.blockade);
+		addPuzzleObject(blockade);
 
 		let triggerAction0 = new TriggerAction(-1, () => {
-			this.blockade.setPos(5 * blockSize, 0, 5 * blockSize);
+			blockade.setPos(5 * blockSize, 0, 5 * blockSize);
 		});
 
 		let triggerAction1 = new TriggerAction(1, () => {
-			this.blockade.setPos(blockSize, 0, 5 * blockSize);
+			blockade.setPos(blockSize, 0, 5 * blockSize);
 
 			//pit should only be activated when walking right, so kinda reset the first trigger to pass
-			// if (system.triggersForCompletion.length === 1) {
-			// 	system.triggersForCompletion.push(6);
-			// }
+			if (system.triggersForCompletion.length === 1) {
+				system.triggersForCompletion.push(6);
+			}
 		});
 
 		system.addTriggerAction(0, triggerAction0);
 		system.addTriggerAction(1, triggerAction1);
-		// system.triggersForCompletion.push(3);
+		system.triggersForCompletion.push(3);
 		system.triggersForCompletion.push(6);
 
 		system.onCompleteAction = () => {
 			floorBlocks[5].setAir(true);
 			floorBlocks[7].setAir(true);
 			floorBlocks[9].setAir(true);
+
+			pitBlocks.forEach(block => {
+				block.setAir(false);
+				addPuzzleObject(block);
+			});
+
 			lastCheckPoint = new Checkpoint(createVector(2 * blockSize, 0, 1.5 * blockSize), 0);
 		};
 
@@ -94,98 +98,75 @@ class TriggerSystemHandler {
 
 	createBlockRemover() {
 
-		let system = new TriggerSystem(false);
+		let system = new TriggerSystem();
 
-		system.onCompleteAction = () => {
-
-			this.blockade.setPos(-300, 0, -300);
-
-			pitBlocks.forEach(block => {
-				block.setAir(false);
-				physicsHandler.addCollidable(block);
-			});
-		};
-
+		system.onCompleteAction = () => {removePuzzleObject(blockade)};
 		system.triggersForCompletion.push(0);
 		this.triggerSystems.push(system);
 	}
 
-	createPit() {
+	createPitPuzzle() {
 
-		let system = new TriggerSystem(false);
-
-		let removeBlockadeAction = new TriggerAction(0, () => {
-
-			if (this.blockade.isVisible) {
-				removePuzzleObject(this.blockade);
-				this.blockade.isVisible = false;
-
-				pitBlocks.forEach(block => {
-					block.setAir(false);
-					physicsHandler.addCollidable(block);
-				});
-			}
-		});
+		let system = new TriggerSystem();
 
 		let showButtonAction = new TriggerAction(-1, () => {
 			floorBlocks[5].setAir(false);
 			floorBlocks[7].setAir(false);
 			floorBlocks[9].setAir(false);
-			pitCloseButton.isVisible = true;
+
+			addPuzzleObject(pitCloseButton);
 		});
 
 		let showPitAction = new TriggerAction(1, () => {
 			floorBlocks[5].setAir(true);
 			floorBlocks[7].setAir(true);
 			floorBlocks[9].setAir(true);
-			pitCloseButton.isVisible = false;
+
+			removePuzzleObject(pitCloseButton);
 		});
 
-		system.addTriggerAction(0, removeBlockadeAction);
 		system.addTriggerAction(4, showButtonAction);
 		system.addTriggerAction(5, showPitAction);
 
 		system.onCompleteAction = () => {
 			pitBlocks.forEach(block => {
-				block.setAir(true);
-				physicsHandler.removeCollidable(block);
+				removePuzzleObject(block);
 			});
 		};
 
 		this.triggerSystems.push(system);
 	}
 
-	createButtonPuzzle() {
+	createRemovePit() {
 
-		let system = new TriggerSystem(true);
+		let system = new TriggerSystem();
 
 		let showMural = new TriggerAction(1, () => {
-
-			if (pitCloseButton.isVisible) {
-
-				pitCloseButton.isVisible = false;
-				wallMural.isVisible = true;
-				system.setCompleted();
-			}
+			removePuzzleObject(pitCloseButton);
+			addPuzzleObject(wallMural);
+			system.setCompleted();
 		});
 
 		system.addTriggerAction(5, showMural);
-
 		this.triggerSystems.push(system);
 	}
 
-	createParkour() {
+	createFiveButtons() {
 
-		let system = new TriggerSystem(true);
+		let system = new TriggerSystem();
 
 		let showButtonPuzzle = new TriggerAction(1, () => {
-			system.setCompleted();
-			fiveButtons.forEach(button => button.isVisible = true);
+
+			fiveButtons.forEach(button => {
+				addPuzzleObject(button);
+			});
 		});
 
 		system.addTriggerAction(2, showButtonPuzzle);
 
 		system.onCompleteAction = () => {
+
+			removePuzzleObject(wallMural);
 
 			floorBlocks[0].setAir(true);
 			floorBlocks[1].setAir(true);
@@ -196,9 +177,12 @@ class TriggerSystemHandler {
 			floorBlocks[12].setAir(true);
 
 			crackedBlocks.forEach(block => {
-				block.setAir(false);
-				physicsHandler.addCollidable(block);
+				addPuzzleObject(block);
 			});
+
+			blockade.setPos(5 * blockSize, 0, 4 * blockSize);
+			addPuzzleObject(blockade);
+			addPuzzleObject(parkourEndButton);
 
 			lastCheckPoint = new Checkpoint(createVector(1.5 * blockSize, 0, 3.5 * blockSize), 270);
 			lastCheckPoint.onResetLv = () => crackedBlocks.forEach(block => block.replace());

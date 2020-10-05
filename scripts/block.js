@@ -34,12 +34,14 @@ class Block extends Collidable {
 	setFalling() {
 		this.isAboutToFall = false;
 		this.isRigid = false;
+		this.hasGravity = true;
 		this.isSolid = false;
 	}
 
 	replace() {
 		this.setAir(false);
 		this.isRigid = true;
+		this.hasGravity = false;
 		this.velX = 0;
 		this.velY = 0;
 		this.velZ = 0;

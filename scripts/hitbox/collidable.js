@@ -1,6 +1,6 @@
 class Collidable {
 
-	constructor(x, y, z, widthX, height, widthZ, isCollidable = true, isRigid = true) {
+	constructor(x, y, z, widthX, height, widthZ, isCollidable = true, isRigid = true, hasGravity = false) {
 
 		this.pos = createVector(x, y, z);
 		this.hitbox = new Hitbox(x, y, z, widthX, height, widthZ);
@@ -11,9 +11,9 @@ class Collidable {
 
 		this.isSolid = isCollidable;
 		this.isRigid = isRigid;
+		this.hasGravity = hasGravity;
 
 		this.isOnGround = false;
-
 		this.isBeingControlled = false;
 	}
 

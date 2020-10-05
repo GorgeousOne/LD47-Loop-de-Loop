@@ -1,11 +1,12 @@
 // const maxSpeed = 15;
 const maxSpeed = 7;
+const FOV = 70;
 
 class Player extends Collidable {
 
 	constructor(x, y, z, yaw) {
 
-		super(x, y, z, 20, 80, 20, false, false);
+		super(x, y, z, 20, 80, 20, false, false, true);
 
 		this.yaw = yaw;
 		this.pitch = 0;
@@ -47,7 +48,7 @@ class Player extends Collidable {
 	}
 
 	applyFOV() {
-		perspective(radians(70), width/height, this.hitbox.widthX/3, 2500)
+		perspective(radians(FOV), width/height, this.hitbox.widthX/3, 2500)
 	}
 
 	applyCam() {
