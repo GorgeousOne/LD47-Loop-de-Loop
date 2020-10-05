@@ -5,7 +5,7 @@ class Player extends Collidable {
 
 	constructor(x, y, z, yaw) {
 
-		super(x, y, z, 20, 80, 20, false, true);
+		super(x, y, z, 20, 80, 20, false, false);
 
 		this.yaw = yaw;
 		this.pitch = 0;
@@ -47,7 +47,7 @@ class Player extends Collidable {
 	}
 
 	applyFOV() {
-		perspective(radians(60), width/height, this.hitbox.widthX/3, 2500)
+		perspective(radians(70), width/height, this.hitbox.widthX/3, 2500)
 	}
 
 	applyCam() {

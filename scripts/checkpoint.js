@@ -3,7 +3,7 @@ class Checkpoint {
 	constructor(pos, yaw) {
 		this.pos = pos;
 		this.yaw = yaw;
-		this.onResetLvl = undefined;
+		this.onResetLv = undefined;
 	}
 
 	tpPlayer() {
@@ -15,8 +15,8 @@ class Checkpoint {
 		player.velY = 0;
 		player.velZ = 0;
 
-		if(this.onResetLvl) {
-			this.onResetLvl();
+		if(this.onResetLv) {
+			this.onResetLv();
 		}
 	}
 }

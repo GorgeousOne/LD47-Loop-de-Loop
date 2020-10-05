@@ -35,13 +35,14 @@ class PhysicsHandler {
 
 		this.collidables.forEach(collidable => {
 
-			if (collidable.hasGravity)
-				collidable.velY = constrain(collidable.velY - gravity, -maxVel, maxVel);
+			if (!collidable.isRigid) {
 
-			collidable.updateY(this.collidables);
-			collidable.updateX(this.collidables);
-			collidable.updateZ(this.collidables);
-			collidable.isBeingControlled = false;
+				collidable.velY = constrain(collidable.velY - gravity, -maxVel, maxVel);
+				collidable.updateY(this.collidables);
+				collidable.updateX(this.collidables);
+				collidable.updateZ(this.collidables);
+				collidable.isBeingControlled = false;
+			}
 		});
 	}
 

@@ -5,7 +5,7 @@ class Button extends Interactable {
 
 		super();
 		this.color = color(255, 10, 10);
-		this.hoverColor = color(255, 70, 40);
+		this.hoverColor = color(255, 80, 10);
 
 		this.isVisible = isVisible;
 		this.pos = createVector(x, y, z);
