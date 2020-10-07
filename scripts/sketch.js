@@ -477,20 +477,19 @@ function createButtons() {
 			buttonSound.play();
 			fiveButtons.forEach(button => removePuzzleObject(button));
 
-			let fakeBlock = new Block(2*blockSize+1, 0.01, 3*blockSize+0.01, blockSize, blockSize, blockSize-0.02);
+			let fakeBlock = new Block(2*blockSize, 0.01, 3*blockSize-0.5, 10, blockSize, blockSize);
 			fakeBlock.isSolid = false;
 
 			innerWallBlocks[1].translate(0, -blockSize, 0);
 			floorBlocks[4].translate(0, blockSize, 0);
-			triggerBlocks[6].translate(0, 0, -blockSize);
 			addPuzzleObject(fakeBlock);
 			addPuzzleObject(finishButton);
 
 			lastCheckPoint.onResetLv = () => {
 				parkourEndButton.isEnabled = true;
 				crackedBlocks.forEach(block => block.replace());
-				innerWallBlocks[1].translate(0, blockSize, 0);
-				floorBlocks[4].translate(0, -blockSize, 0);
+				innerWallBlocks[1].setPos(2*blockSize, -10*blockSize, 3*blockSize);
+				floorBlocks[4].setPos(blockSize, -10*blockSize, 5*blockSize);
 			};
 		};
 
@@ -501,6 +500,7 @@ function createButtons() {
 		finishButton.onInteract = () => {
 
 			buttonSound.play();
+			finishButton.isEnabled = false;
 			player.hasGravity = false;
 			player.velY = 1;
 			showFinishScreen = true;
